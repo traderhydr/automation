@@ -14,6 +14,9 @@ fetch.py (Telethon)  →  parse.py (regex + Claude fallback)  →  stats.py  →
 5. Real dry run: `python main.py` with `DRY_RUN=1`. When happy, set `DRY_RUN=0`.
 6. Schedule: add the same values as GitHub repo **secrets** (and `CHANNEL_NAME`, `JOIN_LINK`, `DRY_RUN` as **variables**); `.github/workflows/daily.yml` runs it every weekday.
 
+## Branding
+Brand name `CHANNEL_NAME` = **Trader Hydr**; logo `assets/logo.jpg` (cropped to a circle) appears on every card and chart (`src/branding.py`). Swap the file or set `LOGO_IMAGE` to change it. Optional `assets/hero.jpg` = background photo on the daily results card.
+
 ## Your links (shown under every post)
 Set as repo **variables** (or `.env`): `TELEGRAM_LINK` (free channel), `PREMIUM_LINK` (premium channel / how to join), `CONTACT_LINK` (your DM), `X_LINK`, `YOUTUBE_LINK`, `BLOFIN_REF_LINK`, `COPY_TRADING_LINK`, `BINANCE_CREATOR_LINK`. Blank ones are skipped. Defaults already set in `src/config.py`: @ZoroTradez (free channel), @Trader_Hydr (X), @traderhydr (YouTube), BloFin and Binance referral links.
 Referral/affiliate links automatically get a "I may earn a commission" disclosure line (required by most platforms and regulators). On X the links go in a reply under the post to keep the main post clean.

@@ -4,6 +4,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from . import config
 from .periods import PERIODS
+from . import branding
 
 BG, FG, GREEN, RED, ACC = "#0b1220", "#e8eefc", "#22c55e", "#ef4444", "#38bdf8"
 
@@ -15,8 +16,9 @@ def _style():
 
 
 def _footer(fig):
-    fig.text(0.5, 0.012, f"{config.CHANNEL_NAME} • {config.PNL_NOTE} • Past results ≠ future returns • Not financial advice",
-             ha="center", fontsize=9, color="#7f8db0")
+    t = fig.text(0.5, 0.012, f"{config.CHANNEL_NAME} • {config.PNL_NOTE} • Past results ≠ future returns • Not financial advice",
+                 ha="center", fontsize=9, color="#7f8db0")
+    branding.add_logo_before_text(fig, t, size_px=26)
 
 
 def summary_card(st, ctx, period, path, label=None):
@@ -25,6 +27,7 @@ def summary_card(st, ctx, period, path, label=None):
     _style()
     fig = plt.figure(figsize=(8, 8))
     fig.text(0.5, 0.92, config.CHANNEL_NAME.upper(), ha="center", fontsize=20, weight="bold", color=ACC)
+    branding.add_logo_fig(fig, 0.05, 0.875, 0.11)
     fig.text(0.5, 0.87, title, ha="center", fontsize=13, color="#9fb0d6")
     col = GREEN if st["total_pct"] >= 0 else RED
     fig.text(0.5, 0.67, f"{st['total_pct']:+.2f}%", ha="center", fontsize=64, weight="bold", color=col)
@@ -125,7 +128,12 @@ def results_grid(st, path, date_label=None):
         bg[:, x0:, :] = bg[:, x0:, :] * (1 - alpha[None, :, None]) + crop * alpha[None, :, None]
         ax.imshow(bg.astype("uint8"), extent=(0, W, H, 0), aspect="auto", zorder=1)
     GOLD = "#f5c22b"
-    ax.text(48, 56, f"{config.CHANNEL_NAME.upper()} · {PERIODS['daily'][2]}", color="#f1f3f7", fontsize=17,
+    lg = branding.logo_rgba(200)
+    hx = 48
+    if lg is not None:                       # round logo to the left of the header, like a channel avatar
+        ax.imshow(lg, extent=(48, 48 + 56, 28 + 56, 28), zorder=6, aspect="auto"); hx = 48 + 56 + 14
+        ax.set_xlim(0, W); ax.set_ylim(H, 0)
+    ax.text(hx, 56, f"{config.CHANNEL_NAME.upper()} · {PERIODS['daily'][2]}", color="#f1f3f7", fontsize=17,
             weight="bold", va="center", zorder=5)
     d = date_label or datetime.fromisoformat(st["last"]).strftime("%d %b %Y").upper()
     ax.text(48, 140, d, color=GOLD, fontsize=52, weight="bold", va="center", zorder=5)

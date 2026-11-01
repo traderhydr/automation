@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch
 from . import config
 from .scenario import key_level_text, human
+from . import branding
 from .signal_chart import fmt, BG, GRID, UP, DN, GREEN, RED, GOLD, FG
 
 MUTED = "#8b95a9"
@@ -88,6 +89,7 @@ def scenario_chart(base, candles, lv, interval, source, path):
     l1, l2 = key_level_text(base, lv, fmt)
     fig.text(0.02, 0.062, "Key Level in Focus:", fontsize=11.5, weight="bold", color=GOLD)
     fig.text(0.155, 0.062, l1, fontsize=11.5); fig.text(0.02, 0.028, l2, fontsize=10.5, color=MUTED)
-    fig.text(0.98, 0.028, f"{config.CHANNEL_NAME} · Not financial advice · Trade with caution", fontsize=9.5, color=MUTED, ha="right")
+    ft = fig.text(0.98, 0.028, f"{config.CHANNEL_NAME} · Not financial advice · Trade with caution", fontsize=9.5, color=MUTED, ha="right")
+    branding.add_logo_before_text(fig, ft, size_px=30)
     fig.savefig(path, dpi=100); plt.close(fig)
     return path

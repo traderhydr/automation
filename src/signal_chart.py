@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 from . import config
 from .signals import risk_reward
+from . import branding
 
 BG, GRID, UP, DN = "#0b0e14", "#1b212c", "#26a65b", "#e0453f"
 GREEN, RED, BLUE, GOLD, FG = "#4ade80", "#f87171", "#60a5fa", "#f5c22b", "#e8eefc"
@@ -88,6 +89,7 @@ def signal_chart(sig, candles, interval, source, path):
     fig.text(0.90, 0.862, "  ".join(f"TP{t['n']} {t['rr']}R" for t in rr["tps"]), fontsize=10.5, ha="right", color=GREEN)
     if sig.get("strategy"):
         fig.text(0.04, 0.02, f"Strategy: {sig['strategy']}", fontsize=11, color="#9aa4b8")
-    fig.text(0.96, 0.02, f"{config.CHANNEL_NAME} · Not financial advice · Trade with caution", fontsize=10, color="#7f8db0", ha="right")
+    ft = fig.text(0.96, 0.02, f"{config.CHANNEL_NAME} · Not financial advice · Trade with caution", fontsize=10, color="#7f8db0", ha="right")
+    branding.add_logo_before_text(fig, ft, size_px=30)
     fig.savefig(path, dpi=100); plt.close(fig)
     return path

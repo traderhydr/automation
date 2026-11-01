@@ -1,5 +1,0 @@
-.env
-*.session
-data/
-out/
-__pycache__/

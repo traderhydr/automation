@@ -70,6 +70,11 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 - Premium joining is by DM: PREMIUM_LINK/CONTACT_LINK = https://t.me/Hydrzoro, handle @Hydrzoro (user personally replies to all queries). Link block says 'Join Premium: DM @Hydrzoro'; signal captions: 'DM @Hydrzoro to join'. Contact line is hidden when identical to premium.
 - STILL MISSING: RANDOM_SECRET, CHANNEL_NAME choice, real trade samples, keys.
 
+## Update – branding
+- CHANNEL_NAME = 'Trader Hydr' (user), logo = assets/logo.jpg (purple Zoro artwork the user sent; round crop via src/branding.py) on daily grid header, summary card, equity/bars footer, signal chart and scenario chart.
+- Fixed config bug: unset GitHub vars arrive as '' and wiped defaults; `env()` now falls back to default on empty.
+- Note: logo is third-party anime fan art; may be flagged on X/YouTube ads. STILL MISSING: RANDOM_SECRET, real trade samples, keys.
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).

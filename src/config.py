@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def env(name, default=""):
-    return os.getenv(name, default).strip()
+    return (os.getenv(name) or "").strip() or default   # empty string (unset GitHub variable) -> default
 
 TG_API_ID = int(env("TG_API_ID", "0") or 0)
 TG_API_HASH = env("TG_API_HASH")
@@ -15,7 +15,8 @@ PUBLIC_CHANNEL = env("PUBLIC_CHANNEL")
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
 CLAUDE_MODEL = env("CLAUDE_MODEL", "claude-sonnet-5-5")
 DISCORD_WEBHOOK_URL = env("DISCORD_WEBHOOK_URL")
-CHANNEL_NAME = env("CHANNEL_NAME", "My Trading Signals")
+CHANNEL_NAME = env("CHANNEL_NAME", "Trader Hydr")
+LOGO_IMAGE = env("LOGO_IMAGE", "assets/logo.jpg")
 TELEGRAM_LINK = env("TELEGRAM_LINK", "https://t.me/ZoroTradez")          # your public Telegram channel / contact
 JOIN_LINK = env("JOIN_LINK") or TELEGRAM_LINK
 CONTACT_LINK = env("CONTACT_LINK", "https://t.me/Hydrzoro")            # your Telegram DM / support, e.g. https://t.me/yourusername
