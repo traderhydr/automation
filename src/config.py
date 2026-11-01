@@ -18,7 +18,7 @@ DISCORD_WEBHOOK_URL = env("DISCORD_WEBHOOK_URL")
 CHANNEL_NAME = env("CHANNEL_NAME", "My Trading Signals")
 TELEGRAM_LINK = env("TELEGRAM_LINK", "https://t.me/ZoroTradez")          # your public Telegram channel / contact
 JOIN_LINK = env("JOIN_LINK") or TELEGRAM_LINK
-CONTACT_LINK = env("CONTACT_LINK")            # your Telegram DM / support, e.g. https://t.me/yourusername
+CONTACT_LINK = env("CONTACT_LINK", "https://t.me/Hydrzoro")            # your Telegram DM / support, e.g. https://t.me/yourusername
 X_LINK = env("X_LINK", "https://x.com/Trader_Hydr")
 YOUTUBE_LINK = env("YOUTUBE_LINK", "https://youtube.com/@traderhydr")
 BLOFIN_REF_LINK = env("BLOFIN_REF_LINK", "https://partner.blofin.com/d/HYDR")
@@ -42,5 +42,6 @@ PUBLIC_SIGNALS_PER_DAY = int(env("PUBLIC_SIGNALS_PER_DAY", "2") or 0)   # 0 = ev
 PUBLIC_SIGNAL_DELAY_MIN = int(env("PUBLIC_SIGNAL_DELAY_MIN", "0") or 0)   # 0 = post immediately (default)
 PUBLIC_WINDOW_START = int(env("PUBLIC_WINDOW_START", "8") or 8)         # local hour, inclusive
 PUBLIC_WINDOW_END = int(env("PUBLIC_WINDOW_END", "22") or 22)           # local hour, exclusive
-PREMIUM_LINK = env("PREMIUM_LINK")                                       # where to subscribe / contact for premium
+PREMIUM_LINK = env("PREMIUM_LINK", "https://t.me/Hydrzoro")
+PREMIUM_HANDLE = env("PREMIUM_HANDLE", "@Hydrzoro")      # people DM this handle to join premium                                       # where to subscribe / contact for premium
 RANDOM_SECRET = env("RANDOM_SECRET", "change-me")                        # keeps the daily random times unpredictable

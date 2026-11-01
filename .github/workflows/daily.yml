@@ -67,6 +67,7 @@ jobs:
           JOIN_LINK: ${{ vars.JOIN_LINK }}
           MARGIN_PER_TRADE_PCT: ${{ vars.MARGIN_PER_TRADE_PCT || '100' }}
           TELEGRAM_LINK: ${{ vars.TELEGRAM_LINK }}
+          PREMIUM_HANDLE: ${{ vars.PREMIUM_HANDLE }}
           CONTACT_LINK: ${{ vars.CONTACT_LINK }}
           X_LINK: ${{ vars.X_LINK }}
           YOUTUBE_LINK: ${{ vars.YOUTUBE_LINK }}

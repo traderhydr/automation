@@ -6,7 +6,7 @@ from . import config
 def _items():
     return [
         ("Free channel", "📢", config.TELEGRAM_LINK, False),
-        ("Contact / DM", "💬", config.CONTACT_LINK, False),
+        ("Contact / DM", "💬", "" if config.CONTACT_LINK == config.PREMIUM_LINK else config.CONTACT_LINK, False),
         ("X (Twitter)", "🐦", config.X_LINK, False),
         ("YouTube", "▶️", config.YOUTUBE_LINK, False),
         ("Copy trading", "🤝", config.COPY_TRADING_LINK, True),
@@ -27,7 +27,7 @@ def telegram_block():
             rows.append(f'{emoji} {label}: {html.escape(url, quote=False)}')
             aff = aff or is_aff
     if config.PREMIUM_LINK and _clean(config.PREMIUM_LINK):
-        rows.insert(0, f"💎 Premium channel: {html.escape(config.PREMIUM_LINK, quote=False)}")
+        rows.insert(0, f"💎 Join Premium: DM {config.PREMIUM_HANDLE} → {html.escape(config.PREMIUM_LINK, quote=False)}")
     if not rows:
         return ""
     note = "\n<i>Referral / affiliate links: I may earn a commission at no extra cost to you.</i>" if aff else ""
@@ -41,7 +41,7 @@ def plain_block():
         if _clean(url):
             rows.append(f"{emoji} {label}: {url}"); aff = aff or is_aff
     if config.PREMIUM_LINK and _clean(config.PREMIUM_LINK):
-        rows.insert(0, f"💎 Premium channel: {config.PREMIUM_LINK}")
+        rows.insert(0, f"💎 Join Premium: DM {config.PREMIUM_HANDLE} → {config.PREMIUM_LINK}")
     if not rows:
         return ""
     return "🔗 Links\n" + "\n".join(rows) + ("\n(Referral/affiliate links – I may earn a commission.)" if aff else "")

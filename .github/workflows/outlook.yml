@@ -26,6 +26,7 @@ jobs:
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
           CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
           TELEGRAM_LINK: ${{ vars.TELEGRAM_LINK }}
+          PREMIUM_HANDLE: ${{ vars.PREMIUM_HANDLE }}
           CONTACT_LINK: ${{ vars.CONTACT_LINK }}
           X_LINK: ${{ vars.X_LINK }}
           YOUTUBE_LINK: ${{ vars.YOUTUBE_LINK }}

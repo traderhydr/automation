@@ -34,6 +34,7 @@ jobs:
           PUBLIC_SIGNAL_DELAY_MIN: ${{ vars.PUBLIC_SIGNAL_DELAY_MIN || '0' }}
           RANDOM_SECRET: ${{ secrets.RANDOM_SECRET }}
           TELEGRAM_LINK: ${{ vars.TELEGRAM_LINK }}
+          PREMIUM_HANDLE: ${{ vars.PREMIUM_HANDLE }}
           CONTACT_LINK: ${{ vars.CONTACT_LINK }}
           X_LINK: ${{ vars.X_LINK }}
           YOUTUBE_LINK: ${{ vars.YOUTUBE_LINK }}

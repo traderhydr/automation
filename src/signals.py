@@ -1,6 +1,7 @@
 """New-signal posts -> parsed signal, risk/reward maths, candles from public exchange APIs."""
 import re
 import requests
+from . import config
 
 NUM = re.compile(r"\d+(?:\.\d+)?")
 FILL = re.compile(r"#?([A-Z0-9]{2,15})\s*/\s*(USDT|USDC)\s+Entry\s+(\d+)\s*✅?\s*[\s\S]*?Average Entry Price\s*:\s*(\d+(?:\.\d+)?)", re.I)
@@ -122,9 +123,9 @@ def signal_caption(sig, status=None, delay_min=None, premium_link=""):
     elif status and "_then_stop" in status:
         stat = f"✅ TP{status[2:status.index('_')]} reached, then stopped"
     delay = (f"🕒 <i>Shared {delay_min} min after entry – premium members got this live.</i>\n"
-             + (f"🔒 Get every signal in real time: {premium_link}\n" if premium_link else "")) if delay_min else \
+             + (f"🔒 Get every signal in real time: DM {config.PREMIUM_HANDLE} to join premium\n" if premium_link else "")) if delay_min else \
             ("🎁 <i>Free sample from our premium channel – you can take it live.</i>\n"
-             + (f"🔒 Premium members get every signal: {premium_link}\n" if premium_link else ""))
+             + (f"🔒 Premium members get every signal live – DM {config.PREMIUM_HANDLE} to join\n" if premium_link else ""))
     body = (f"⚡ <b>#{sig['base']} {sig['side']}</b>{lev} {side_emoji}\n\n"
             f"🎯 Entry: {ents}\n💰 TPs: {tps}\n🛑 SL: {fmt(sig['sl'])}\n\n"
             f"⚖️ <b>R:R 1:{rr['final_rr']}</b> (to TP{len(rr['tps'])}) · risk {rr['risk_pct']}% price move\n"

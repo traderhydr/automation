@@ -66,6 +66,10 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 - Defaults set in config: free channel https://t.me/ZoroTradez, X https://x.com/Trader_Hydr, YouTube https://youtube.com/@traderhydr (stripped ?si= share tracking), BloFin https://partner.blofin.com/d/HYDR, Binance creator link (kept as given). PUBLIC_CHANNEL should be @ZoroTradez (bot must be admin).
 - Copy trading link set (BloFin copy-trade profile 50803037201). STILL MISSING: PREMIUM_LINK, CONTACT_LINK, RANDOM_SECRET, real trade samples, keys. CHANNEL_NAME unconfirmed (examples used SABBOT / signal template says 'SABBOT REAL'; handles are Trader_Hydr / ZoroTradez).
 
+## Update – premium = DM
+- Premium joining is by DM: PREMIUM_LINK/CONTACT_LINK = https://t.me/Hydrzoro, handle @Hydrzoro (user personally replies to all queries). Link block says 'Join Premium: DM @Hydrzoro'; signal captions: 'DM @Hydrzoro to join'. Contact line is hidden when identical to premium.
+- STILL MISSING: RANDOM_SECRET, CHANNEL_NAME choice, real trade samples, keys.
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).
