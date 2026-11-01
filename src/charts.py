@@ -85,10 +85,77 @@ def bars(st, period, path):
 def build_all(st, ctx, period, outdir):
     """Returns image paths. daily: card + 30-day charts; others: card + charts for the period itself."""
     paths = [f"{outdir}/summary.png"]
-    summary_card(st, ctx, period, paths[0])
+    if period == "daily" and 0 < st["trades"] <= 40:
+        results_grid(st, paths[0])
+    else:
+        summary_card(st, ctx, period, paths[0])
     series = ctx if period == "daily" else st
     cpd = "monthly" if period == "daily" else period
     if len(series["days"]) >= 2:
         equity_curve(series, cpd, f"{outdir}/equity.png"); paths.append(f"{outdir}/equity.png")
         bars(series, cpd, f"{outdir}/bars.png"); paths.append(f"{outdir}/bars.png")
     return paths
+
+
+def results_grid(st, path, date_label=None):
+    """Daily-results scoreboard: one tile per closed trade (winners first, losses included)."""
+    import os, math
+    from datetime import datetime
+    import numpy as np
+    from matplotlib.patches import FancyBboxPatch
+    _style()
+    W, H = 1280, 720
+    fig = plt.figure(figsize=(W / 100, H / 100), dpi=100)
+    ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(0, W); ax.set_ylim(H, 0); ax.axis("off")
+    ax.add_patch(plt.Rectangle((0, 0), W, H, color="#15171c"))
+    if os.path.exists(config.HERO_IMAGE):       # brand photo: cover the right 40%, fade into the background
+        from PIL import Image
+        bg = np.empty((H, W, 3), dtype=float); bg[:] = (0x15, 0x17, 0x1c)
+        x0 = int(W * 0.60)
+        im = Image.open(config.HERO_IMAGE).convert("RGB")
+        sc = max((W - x0) / im.width, H / im.height)
+        im = im.resize((int(im.width * sc) + 1, int(im.height * sc) + 1))
+        left, top = im.width - (W - x0), (im.height - H) // 2          # crop: keep right edge, centre vertically
+        crop = np.asarray(im.crop((left, top, left + (W - x0), top + H)), dtype=float)
+        alpha = np.clip(np.linspace(0, 1, W - x0) / 0.45, 0, 1) ** 1.3  # 0 at the seam -> 1
+        bg[:, x0:, :] = bg[:, x0:, :] * (1 - alpha[None, :, None]) + crop * alpha[None, :, None]
+        ax.imshow(bg.astype("uint8"), extent=(0, W, H, 0), aspect="auto", zorder=1)
+    GOLD = "#f5c22b"
+    ax.text(48, 56, f"{config.CHANNEL_NAME.upper()} · {PERIODS['daily'][2]}", color="#f1f3f7", fontsize=17,
+            weight="bold", va="center", zorder=5)
+    d = date_label or datetime.fromisoformat(st["last"]).strftime("%d %b %Y").upper()
+    ax.text(48, 140, d, color=GOLD, fontsize=52, weight="bold", va="center", zorder=5)
+    ax.text(48, 226, f"{st['wins']} / {st['trades']} in profit", color="#f1f3f7", fontsize=26,
+            weight="bold", va="center", zorder=5)
+    tot_col = "#5fd38d" if st["total_pct"] >= 0 else "#f26d6d"
+    ax.add_patch(FancyBboxPatch((498, 190), 302, 62, boxstyle="round,pad=0,rounding_size=14",
+                                fc="#24272e", ec="none", zorder=4))
+    ax.text(516, 221, "TOTAL", color="#9aa1ad", fontsize=14, va="center", zorder=5, weight="bold")
+    ax.text(786, 221, f"{st['total_pct']:+.2f}%", color=tot_col, fontsize=25, weight="bold", va="center",
+            ha="right", zorder=5)
+    items = st["items"]
+    cols, gap, x_start, y_start = 5, 10, 48, 276
+    cw = (W - 2 * x_start - gap * (cols - 1)) / cols
+    rows = math.ceil(len(items) / cols)
+    avail = 296
+    ch_ = min(50, (avail - gap * (rows - 1)) / rows)
+    fs = 15 if ch_ >= 44 else 12
+    for i, (sym, v) in enumerate(items):
+        r, c = divmod(i, cols)
+        x, y = x_start + c * (cw + gap), y_start + r * (ch_ + gap)
+        win = v >= 0
+        ax.add_patch(FancyBboxPatch((x, y), cw, ch_, boxstyle="round,pad=0,rounding_size=8",
+                                    fc=("#23262d" if win else "#3a2423"),
+                                    ec="none", alpha=0.93, zorder=4))
+        ax.text(x + 12, y + ch_ / 2, sym, color="#f1f3f7", fontsize=fs, weight="bold", va="center", zorder=5)
+        ax.text(x + cw - 12, y + ch_ / 2, f"{v:+.2f}%", color="#5fd38d" if win else "#f26d6d",
+                fontsize=fs, weight="bold", va="center", ha="right", zorder=5)
+    if st["first"]:
+        f, l = datetime.fromisoformat(st["first"]), datetime.fromisoformat(st["last"])
+        ax.text(48, 600, f"Closed trades: {f:%b %d, %H:%M} – {l:%b %d, %H:%M}", color="#8b919c", fontsize=13,
+                va="center", zorder=5)
+    ax.text(48, 660, f"Sum of all closed trades, losses included  ·  {config.EXECUTION_NOTE}  ·  {config.LEVERAGE_NOTE}",
+            color="#8b919c", fontsize=12.5, va="center", zorder=5)
+    ax.text(W - 48, 658, "#DailyResults", color=GOLD, fontsize=13, weight="bold", va="center", ha="right", zorder=6)
+    fig.savefig(path, dpi=100)
+    plt.close(fig)

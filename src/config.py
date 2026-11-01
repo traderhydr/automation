@@ -24,3 +24,6 @@ DRY_RUN = env("DRY_RUN", "1") == "1"
 MARGIN_PER_TRADE_PCT = float(env("MARGIN_PER_TRADE_PCT", "100") or 100)
 PNL_NOTE = env("PNL_NOTE", "Leveraged ROI on margin" if MARGIN_PER_TRADE_PCT == 100 else
                f"Account return, {MARGIN_PER_TRADE_PCT:g}% margin/trade")
+HERO_IMAGE = env("HERO_IMAGE", "assets/hero.jpg")      # optional brand photo shown on the right of the results card
+LEVERAGE_NOTE = env("LEVERAGE_NOTE", "Leveraged returns")  # e.g. "Returns with 10x-25x leverage"
+EXECUTION_NOTE = env("EXECUTION_NOTE", "Executed via Cornix")
