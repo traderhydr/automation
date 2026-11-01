@@ -1,0 +1,36 @@
+name: Daily trade report
+on:
+  schedule:
+    - cron: "30 20 * * 1-5"   # 20:30 UTC Mon-Fri – change to your market close
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - run: python main.py
+        env:
+          TG_API_ID: ${{ secrets.TG_API_ID }}
+          TG_API_HASH: ${{ secrets.TG_API_HASH }}
+          TG_SESSION_STRING: ${{ secrets.TG_SESSION_STRING }}
+          PRIVATE_CHANNEL: ${{ secrets.PRIVATE_CHANNEL }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          PUBLIC_CHANNEL: ${{ secrets.PUBLIC_CHANNEL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
+          JOIN_LINK: ${{ vars.JOIN_LINK }}
+          DRY_RUN: ${{ vars.DRY_RUN || '1' }}
+      # keep trade history between runs
+      - run: |
+          git config user.name "report-bot"; git config user.email "bot@users.noreply.github.com"
+          git add -f data/trades.json && git commit -m "update trade history" && git push || true
