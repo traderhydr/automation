@@ -29,6 +29,14 @@ Your own signal template (`Pair:` / `Direction:`) is recognised for the long/sho
 **Leverage:** with 25x, per-trade ROI can be +20% while the account moves a fraction of that, and adding ROIs overstates account growth. Set `MARGIN_PER_TRADE_PCT` (e.g. `2`) to report account return; charts print the basis in the footer.
 Trades are de-duplicated by Telegram message id, so overlapping daily/weekly runs never double count.
 
+## Signal charts (QNT-style) – `python main.py --signals`
+For every NEW signal post in the private channel (`Pair/Direction/Entry/Take Profits/Stop Loss` template) the bot draws a candlestick chart with the
+entry marker ("OPENED HERE" once Cornix reports the Entry 1 fill), all entries, TP1-n and SL, and the **risk:reward** (reward to each TP ÷ distance to the stop, measured from Entry 1).
+It posts it with a facts-only caption (levels, R:R, hashtags, disclaimer) to the public channel (+ Discord / X). `data/posted_signals.json` stops duplicates; signals older than 45 min are never posted.
+Candles come from free public APIs (Binance → Bybit → OKX → Gate; Binance blocks US IPs such as GitHub runners, hence the fallbacks). Scale mismatches (1000PEPE etc.) are auto-corrected or the signal is skipped.
+`.github/workflows/signals.yml` checks every 10 min (GitHub may delay it); for instant posting run `python main.py --signals --hours 1` in a loop on your own server.
+**Heads-up:** this publishes your signals publicly, i.e. what paying members get, and at the same moment. Consider a delay if the private channel is a paid product.
+
 ## Trade message format (non-Cornix)
 Closed-trade messages like `#BTCUSDT LONG closed ✅ +3.2%`, `ETH/USDT short SL hit -1.5%`, `XAUUSD BUY TP2 +1.8R` parse by regex.
 Other formats fall back to Claude. Adjust `src/parse.py` to match your real posts.

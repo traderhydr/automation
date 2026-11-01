@@ -27,3 +27,5 @@ PNL_NOTE = env("PNL_NOTE", "Leveraged ROI on margin" if MARGIN_PER_TRADE_PCT == 
 HERO_IMAGE = env("HERO_IMAGE", "assets/hero.jpg")      # optional brand photo shown on the right of the results card
 LEVERAGE_NOTE = env("LEVERAGE_NOTE", "Leveraged returns")  # e.g. "Returns with 10x-25x leverage"
 EXECUTION_NOTE = env("EXECUTION_NOTE", "Executed via Cornix")
+SIGNAL_INTERVAL = env("SIGNAL_INTERVAL", "15m")                 # candle size on the signal chart
+SIGNAL_MAX_AGE_MIN = int(env("SIGNAL_MAX_AGE_MIN", "45") or 45)  # never post a signal older than this

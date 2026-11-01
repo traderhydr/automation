@@ -34,6 +34,11 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 - Leverage 25x: added `MARGIN_PER_TRADE_PCT` + `PNL_NOTE` (chart footer). ASK USER what % of account each trade uses.
 - Channel branding: `CHANNEL_NAME=SABBOT`.
 
+## Update – signal charts
+- User wants QNT-style signal chart posted PUBLICLY (shows where trade opened + R:R). Built `src/signals.py`, `src/signal_chart.py`, `main.py --signals`, `.github/workflows/signals.yml`.
+- R:R = reward to each TP / distance Entry1→SL (ORDI sample: TP1 0.12R … TP4 1.1R, risk 5.12%). Candle APIs unreachable from the dev sandbox -> only parsers mocked + chart tested on synthetic candles; live fetch UNTESTED.
+- Still to do: BTC support/resistance scenario chart (reference #2) not built; confirm with user whether signals should be delayed (paid members).
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).

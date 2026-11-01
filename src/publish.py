@@ -2,6 +2,14 @@ import requests
 from . import config
 
 
+def telegram_photo(path, caption):
+    """One photo with its caption (Telegram caption limit: 1024 chars)."""
+    base = f"https://api.telegram.org/bot{config.TG_BOT_TOKEN}"
+    with open(path, "rb") as f:
+        requests.post(f"{base}/sendPhoto", data={"chat_id": config.PUBLIC_CHANNEL, "caption": caption[:1024],
+                      "parse_mode": "HTML"}, files={"photo": f}).raise_for_status()
+
+
 def telegram_post(paths, caption):
     base = f"https://api.telegram.org/bot{config.TG_BOT_TOKEN}"
     # Telegram caption limit is 1024 chars: send the album, then the full text.
