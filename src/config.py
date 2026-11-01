@@ -16,13 +16,14 @@ ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
 CLAUDE_MODEL = env("CLAUDE_MODEL", "claude-sonnet-5-5")
 DISCORD_WEBHOOK_URL = env("DISCORD_WEBHOOK_URL")
 CHANNEL_NAME = env("CHANNEL_NAME", "My Trading Signals")
-TELEGRAM_LINK = env("TELEGRAM_LINK")          # your public Telegram channel / contact
+TELEGRAM_LINK = env("TELEGRAM_LINK", "https://t.me/ZoroTradez")          # your public Telegram channel / contact
 JOIN_LINK = env("JOIN_LINK") or TELEGRAM_LINK
 CONTACT_LINK = env("CONTACT_LINK")            # your Telegram DM / support, e.g. https://t.me/yourusername
-X_LINK = env("X_LINK")
-BLOFIN_REF_LINK = env("BLOFIN_REF_LINK")
+X_LINK = env("X_LINK", "https://x.com/Trader_Hydr")
+YOUTUBE_LINK = env("YOUTUBE_LINK", "https://youtube.com/@traderhydr")
+BLOFIN_REF_LINK = env("BLOFIN_REF_LINK", "https://partner.blofin.com/d/HYDR")
 COPY_TRADING_LINK = env("COPY_TRADING_LINK")
-BINANCE_CREATOR_LINK = env("BINANCE_CREATOR_LINK")
+BINANCE_CREATOR_LINK = env("BINANCE_CREATOR_LINK", "https://app.binance.com/uni-qr/cpro/ZenithX?l=en&r=VUUMW0NT&uc=app_square_share_link&us=copylink")
 TIMEZONE = env("TIMEZONE", "Asia/Karachi")
 DRY_RUN = env("DRY_RUN", "1") == "1"
 # Cornix % are ROI on each trade's own margin (already x leverage). If each trade uses e.g. 2% of your account,

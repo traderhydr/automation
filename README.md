@@ -15,7 +15,7 @@ fetch.py (Telethon)  →  parse.py (regex + Claude fallback)  →  stats.py  →
 6. Schedule: add the same values as GitHub repo **secrets** (and `CHANNEL_NAME`, `JOIN_LINK`, `DRY_RUN` as **variables**); `.github/workflows/daily.yml` runs it every weekday.
 
 ## Your links (shown under every post)
-Set as repo **variables** (or `.env`): `TELEGRAM_LINK` (free channel), `PREMIUM_LINK` (premium channel / how to join), `CONTACT_LINK` (your DM), `X_LINK`, `BLOFIN_REF_LINK`, `COPY_TRADING_LINK`, `BINANCE_CREATOR_LINK`. Blank ones are skipped.
+Set as repo **variables** (or `.env`): `TELEGRAM_LINK` (free channel), `PREMIUM_LINK` (premium channel / how to join), `CONTACT_LINK` (your DM), `X_LINK`, `YOUTUBE_LINK`, `BLOFIN_REF_LINK`, `COPY_TRADING_LINK`, `BINANCE_CREATOR_LINK`. Blank ones are skipped. Defaults already set in `src/config.py`: @ZoroTradez (free channel), @Trader_Hydr (X), @traderhydr (YouTube), BloFin and Binance referral links.
 Referral/affiliate links automatically get a "I may earn a commission" disclosure line (required by most platforms and regulators). On X the links go in a reply under the post to keep the main post clean.
 Don't paste your private channel's open invite link anywhere public – use a join-request link or a payment/bot link so only paying members get in. Long captions (>1024 chars) are sent as a message right after the photo so nothing is cut off.
 

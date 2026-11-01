@@ -8,6 +8,7 @@ def _items():
         ("Free channel", "📢", config.TELEGRAM_LINK, False),
         ("Contact / DM", "💬", config.CONTACT_LINK, False),
         ("X (Twitter)", "🐦", config.X_LINK, False),
+        ("YouTube", "▶️", config.YOUTUBE_LINK, False),
         ("Copy trading", "🤝", config.COPY_TRADING_LINK, True),
         ("BloFin (referral)", "📈", config.BLOFIN_REF_LINK, True),
         ("Binance (creator)", "🟡", config.BINANCE_CREATOR_LINK, True),

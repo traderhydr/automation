@@ -36,6 +36,7 @@ jobs:
           TELEGRAM_LINK: ${{ vars.TELEGRAM_LINK }}
           CONTACT_LINK: ${{ vars.CONTACT_LINK }}
           X_LINK: ${{ vars.X_LINK }}
+          YOUTUBE_LINK: ${{ vars.YOUTUBE_LINK }}
           BLOFIN_REF_LINK: ${{ vars.BLOFIN_REF_LINK }}
           COPY_TRADING_LINK: ${{ vars.COPY_TRADING_LINK }}
           BINANCE_CREATOR_LINK: ${{ vars.BINANCE_CREATOR_LINK }}

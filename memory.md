@@ -62,6 +62,10 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 ## Update – links
 - `src/links.py`: link block under every post (Telegram HTML; plain for Discord / X reply). Vars: TELEGRAM_LINK (free channel), PREMIUM_LINK, CONTACT_LINK, X_LINK, BLOFIN_REF_LINK, COPY_TRADING_LINK, BINANCE_CREATOR_LINK (all blank until user supplies). Affiliate disclosure auto-added. Telegram photo captions >1024 chars now sent as follow-up message.
 
+## Update – user links supplied
+- Defaults set in config: free channel https://t.me/ZoroTradez, X https://x.com/Trader_Hydr, YouTube https://youtube.com/@traderhydr (stripped ?si= share tracking), BloFin https://partner.blofin.com/d/HYDR, Binance creator link (kept as given). PUBLIC_CHANNEL should be @ZoroTradez (bot must be admin).
+- STILL MISSING: PREMIUM_LINK, COPY_TRADING_LINK, CONTACT_LINK, RANDOM_SECRET, real trade samples, keys. CHANNEL_NAME unconfirmed (examples used SABBOT / signal template says 'SABBOT REAL'; handles are Trader_Hydr / ZoroTradez).
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).
