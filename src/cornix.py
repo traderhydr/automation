@@ -21,7 +21,7 @@ SIGNAL_MARK = re.compile(r"signal type|entry orders|entry zone|entry targets?\b|
 # your own signal template: "🪙 Pair: ORDIUSDT" / "🧭 Direction: LONG"
 OWN_PAIR = re.compile(r"pair\s*:\s*#?([A-Z0-9]{2,15}?)(?:/)?(USDT|USDC|USD|BUSD)\b", re.I)
 OWN_DIR = re.compile(r"direction\s*:\s*(long|short)", re.I)
-FINAL = re.compile(r"all take-profit targets? (?:achieved|reached|hit)|stop(?:-| )?(?:loss|target)? (?:target )?hit|"
+FINAL = re.compile(r"all (?:the )?(?:take-profit )?(?:targets?|tps?) (?:were )?(?:achieved|reached|hit|completed)|stop(?:-| )?(?:loss|target)? (?:target )?hit|"
                    r"stop target|closed (?:due to|at|manually|by)|closed", re.I)
 PARTIAL = re.compile(r"entry \d+|take-profit target \d+|tp ?\d+ (?:hit|reached|achieved)|entry target \d+|entry \d+ (?:achieved|reached)|"
                      r"entry (?:order )?(?:achieved|filled)|cancelled|canceled|moved to break", re.I)
