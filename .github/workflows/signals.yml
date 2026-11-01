@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -r requirements.txt
-      - run: python main.py --signals --hours 1
+      - run: python main.py --signals --hours 4
         env:
           TG_API_ID: ${{ secrets.TG_API_ID }}
           TG_API_HASH: ${{ secrets.TG_API_HASH }}
@@ -29,7 +29,12 @@ jobs:
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
           CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
           SIGNAL_INTERVAL: ${{ vars.SIGNAL_INTERVAL || '15m' }}
+          TIMEZONE: ${{ vars.TIMEZONE || 'Asia/Karachi' }}
+          PUBLIC_SIGNALS_PER_DAY: ${{ vars.PUBLIC_SIGNALS_PER_DAY || '2' }}
+          PUBLIC_SIGNAL_DELAY_MIN: ${{ vars.PUBLIC_SIGNAL_DELAY_MIN || '30' }}
+          PREMIUM_LINK: ${{ vars.PREMIUM_LINK }}
+          RANDOM_SECRET: ${{ secrets.RANDOM_SECRET }}
           DRY_RUN: ${{ vars.DRY_RUN || '1' }}
       - run: |
           git config user.name "report-bot"; git config user.email "bot@users.noreply.github.com"
-          git add -f data/posted_signals.json 2>/dev/null; git commit -m "update posted signals" && git pull --rebase -q && git push || true
+          git add -f data/public_signals.json 2>/dev/null; git commit -m "update public signal state" && git pull --rebase -q && git push || true

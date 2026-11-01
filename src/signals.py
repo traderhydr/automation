@@ -27,14 +27,19 @@ def parse_signals(messages):
             "leverage": int(lev.group(1)) if lev else None, "strategy": _line(t, "Strategy"),
             "entries": [float(x) for x in entries], "tps": [float(x) for x in tps], "sl": float(sl[0]),
         })
-    # attach first entry fill (where the trade actually opened) if Cornix reported it in the same batch
     for s in out:
-        for m in messages:
-            f = FILL.search(m["text"])
-            if f and f.group(1).upper() == s["base"] and f.group(3) == "1" and m["date"] >= s["date"]:
-                s["fill"] = {"date": m["date"], "price": float(f.group(4))}
-                break
+        find_fill(s, messages)
     return out
+
+
+def find_fill(sig, messages):
+    """Attach the first entry fill (where the trade actually opened) if Cornix reported it in these messages."""
+    for m in messages:
+        f = FILL.search(m["text"])
+        if f and f.group(1).upper() == sig["base"] and f.group(3) == "1" and m["date"] >= sig["date"]:
+            sig["fill"] = {"date": m["date"], "price": float(f.group(4))}
+            return sig
+    return sig
 
 
 def risk_reward(s):
@@ -102,7 +107,7 @@ def fetch_candles(symbol, interval="15m", limit=96, end_ms=None):
     raise RuntimeError(f"no candle source worked for {symbol}: {last}")
 
 
-def signal_caption(sig):
+def signal_caption(sig, status=None, delay_min=None, premium_link=""):
     rr = risk_reward(sig)
     from .signal_chart import fmt
     side_emoji = "🟢" if sig["side"] == "LONG" else "🔴"
@@ -110,10 +115,19 @@ def signal_caption(sig):
     ents = " / ".join(fmt(e) for e in sig["entries"])
     lev = f" · {sig['leverage']}X" if sig["leverage"] else ""
     tags = f"#{sig['base']} #{sig['symbol']} #CryptoSignals #FuturesTrading #Cornix"
-    return (f"⚡ <b>#{sig['base']} {sig['side']}</b>{lev} {side_emoji}\n\n"
+    stat = {"open": "⏳ Still open", "stopped": "🛑 Stopped out"}.get(status or "", "")
+    if status and status.startswith("tp") and "_then_" not in status:
+        stat = f"✅ TP{status[2:]} reached so far"
+    elif status and "_then_stop" in status:
+        stat = f"✅ TP{status[2:status.index('_')]} reached, then stopped"
+    delay = (f"🕒 <i>Shared {delay_min} min after entry – premium members got this live.</i>\n"
+             + (f"🔒 Get every signal in real time: {premium_link}\n" if premium_link else "")) if delay_min else ""
+    body = (f"⚡ <b>#{sig['base']} {sig['side']}</b>{lev} {side_emoji}\n\n"
             f"🎯 Entry: {ents}\n💰 TPs: {tps}\n🛑 SL: {fmt(sig['sl'])}\n\n"
-            f"⚖️ <b>R:R 1:{rr['final_rr']}</b> (to TP{len(rr['tps'])}) · risk {rr['risk_pct']}% price move\n\n"
-            f"{tags}\n⚠️ Not financial advice. Leveraged trading carries high risk. Not every trade wins."), tags
+            f"⚖️ <b>R:R 1:{rr['final_rr']}</b> (to TP{len(rr['tps'])}) · risk {rr['risk_pct']}% price move\n"
+            + (f"📌 Status: <b>{stat}</b>\n" if stat else "") + "\n" + delay + f"\n{tags}\n"
+            "⚠️ Not financial advice. Leveraged trading carries high risk. Not every trade wins.")
+    return body, tags
 
 
 def normalize_candles(candles, ref_price):

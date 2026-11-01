@@ -48,6 +48,11 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 - Reports now cover CALENDAR periods in `TIMEZONE` (day / Mon-Sun week / month / year), posted right after the period ends: hourly workflow gate (00-02h local) in `.github/workflows/daily.yml`, de-dupe via `data/posted_reports.json`, `--date`/`--force` flags. Gate logic verified with simulated dates; real Actions run untested.
 - TIMEZONE = GMT+5 -> `Asia/Karachi` (user said 'gmt' then '+5'; ASSUMED Pakistan-style UTC+5, no DST). Now the default in config + workflow. Reports run 00:00-24:00 GMT+5, post ~00:10 local = 19:10 UTC. Confirm with user if they are elsewhere on +5. Note: signals workflow every 10 min can exceed GitHub free minutes on private repos.
 
+## Update – paid channel teaser policy
+- Private channel is PAID. Public/free channel gets only 2 RANDOM signals/day (`PUBLIC_SIGNALS_PER_DAY`), posted 30 min after the premium post (`PUBLIC_SIGNAL_DELAY_MIN`), random times drawn per day in 08-22 local (`src/public_signals.py`, state `data/public_signals.json`). Caption shows honest status + premium CTA. Replaced the old 'post every signal immediately' behaviour.
+- Simulated a full day of runs: exactly 2 posts/day, >=30 min delay. Real run untested.
+- User must set: PREMIUM_LINK, RANDOM_SECRET (GitHub secret). Results reports (daily etc.) still use ALL trades (not only the 2 teasers) – ask user if that is what they want publicly.
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).

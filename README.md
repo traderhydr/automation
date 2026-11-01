@@ -33,13 +33,15 @@ Your own signal template (`Pair:` / `Direction:`) is recognised for the long/sho
 **Leverage:** with 25x, per-trade ROI can be +20% while the account moves a fraction of that, and adding ROIs overstates account growth. Set `MARGIN_PER_TRADE_PCT` (e.g. `2`) to report account return; charts print the basis in the footer.
 Trades are de-duplicated by Telegram message id, so overlapping daily/weekly runs never double count.
 
-## Signal charts (QNT-style) – `python main.py --signals`
-For every NEW signal post in the private channel (`Pair/Direction/Entry/Take Profits/Stop Loss` template) the bot draws a candlestick chart with the
-entry marker ("OPENED HERE" once Cornix reports the Entry 1 fill), all entries, TP1-n and SL, and the **risk:reward** (reward to each TP ÷ distance to the stop, measured from Entry 1).
-It posts it with a facts-only caption (levels, R:R, hashtags, disclaimer) to the public channel (+ Discord / X). `data/posted_signals.json` stops duplicates; signals older than 45 min are never posted.
-Candles come from free public APIs (Binance → Bybit → OKX → Gate; Binance blocks US IPs such as GitHub runners, hence the fallbacks). Scale mismatches (1000PEPE etc.) are auto-corrected or the signal is skipped.
-`.github/workflows/signals.yml` checks every 10 min (GitHub may delay it); for instant posting run `python main.py --signals --hours 1` in a loop on your own server.
-**Heads-up:** this publishes your signals publicly, i.e. what paying members get, and at the same moment. Consider a delay if the private channel is a paid product.
+## Signal charts (QNT-style) – free-channel teaser, `python main.py --signals`
+Your private channel is paid, so the public channel only gets a **teaser**: `PUBLIC_SIGNALS_PER_DAY` (default **2**) random signals per day,
+each posted `PUBLIC_SIGNAL_DELAY_MIN` (default **30**) minutes after it appeared in the premium channel.
+- **Random picks:** each day N random times are drawn between `PUBLIC_WINDOW_START`–`END` (08:00–22:00, ≥90 min apart, seeded by `RANDOM_SECRET`); the first new signal after each time is the pick. Not cherry-picked, so wins and losses both show.
+- **Chart:** candles up to the moment of posting, entry marker ("OPENED HERE" when Cornix reported the fill), entries, TP1-n, SL and the **R:R** (reward to each TP ÷ distance Entry 1 → SL).
+- **Caption:** levels + R:R + honest **status so far** (open / TPn reached / stopped out) + "shared 30 min after entry – premium got this live" + `PREMIUM_LINK`.
+- State in `data/public_signals.json` (slots, picked signals) so nothing is posted twice. `PUBLIC_SIGNALS_PER_DAY=0` = every signal, still delayed.
+- Candles: Binance → Bybit → OKX → Gate (Binance blocks US IPs like GitHub runners). Scale mismatches (1000PEPE…) are fixed or the signal is skipped.
+- `.github/workflows/signals.yml` runs every 10 min (GitHub may delay it); `python main.py --signals --demo` renders a sample.
 
 ## Market outlook chart (bounce vs dump) – `python main.py --scenario BTCUSDT,ETHUSDT`
 Candles (1h) → swing highs/lows → clustered into **resistance**, a **support zone** and a **major support**; 24h change/high/low/volume are computed from the candles.

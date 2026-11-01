@@ -40,41 +40,64 @@ def demo_signal_data():
     return msgs, cs
 
 
+def _post_signal(sig, status_candles_src, iv, status, delay_min, a):
+    from src import signals, signal_chart, publish
+    candles, src = status_candles_src
+    path = f"out/signal_{sig['id']}.png"
+    signal_chart.signal_chart(sig, candles, iv, src, path)
+    cap, tags = signals.signal_caption(sig, status, delay_min, config.PREMIUM_LINK)
+    print(cap, "\nImage:", path)
+    if a.demo or config.DRY_RUN:
+        print("[DRY RUN] nothing posted.\n"); return False
+    rr = signals.risk_reward(sig)["final_rr"]
+    publish.telegram_photo(path, cap)
+    publish.discord_post([path], f"{sig['base']} {sig['side']} | R:R 1:{rr} (delayed teaser)\n{tags}")
+    publish.x_post([path], f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | shared {delay_min} min after premium members. Details on chart 👇", " ".join(tags.split()[:3]))
+    return True
+
+
 def run_signals(a):
-    """Post a QNT-style chart (entry, TPs, SL, R:R) for each NEW signal in the private channel."""
-    from src import signals, signal_chart
-    state_path = "data/posted_signals.json"
-    posted = set(json.load(open(state_path))) if os.path.exists(state_path) else set()
+    """FREE-channel teaser: N random signals/day, each posted DELAY min after it went out in the paid channel."""
+    from src import signals, public_signals as ps
+    iv, delay = config.SIGNAL_INTERVAL, config.PUBLIC_SIGNAL_DELAY_MIN
     if a.demo:
         msgs, demo_cs = demo_signal_data()
+        sig = signals.parse_signals(msgs)[0]
+        cs = signals.normalize_candles(demo_cs, sig["entries"][0])
+        ref = datetime.fromisoformat(sig["fill"]["date"]).timestamp() * 1000 - 3 * 900000
+        status = ps.trade_status(sig, cs, ref)
+        _post_signal(sig, (cs, "demo"), iv, status, delay or 30, a); return
+
+    from src.fetch import fetch_messages
+    tz = ZoneInfo(config.TIMEZONE)
+    now = datetime.now(tz)
+    msgs = fetch_messages(max(1, a.hours))
+    sigs = signals.parse_signals(msgs)
+    state = ps.load()
+    day = now.date().isoformat()
+    sd = state.setdefault(day, {"slots": ps.plan_slots(now.date(), config.PUBLIC_SIGNALS_PER_DAY, config.PUBLIC_WINDOW_START,
+                                                       config.PUBLIC_WINDOW_END, config.RANDOM_SECRET, tz), "assigned": {}})
+    if config.PUBLIC_SIGNALS_PER_DAY <= 0:          # unlimited mode: every signal becomes a slot of its own
+        for s in sigs:
+            sd["assigned"].setdefault(f"all-{s['id']}", {"sig": s, "posted": False})
     else:
-        from src.fetch import fetch_messages
-        msgs, demo_cs = fetch_messages(max(1, a.hours)), None
-    now = datetime.now(timezone.utc)
-    for sig in signals.parse_signals(msgs):
-        age_min = (now - datetime.fromisoformat(sig["date"])).total_seconds() / 60
-        if sig["id"] in posted or age_min > config.SIGNAL_MAX_AGE_MIN:
-            continue
-        iv = config.SIGNAL_INTERVAL
-        if demo_cs:
-            candles, src = demo_cs, "demo"
-        else:
-            ref = datetime.fromisoformat(sig.get("fill", {}).get("date", sig["date"])).timestamp() * 1000
-            candles, src = signals.fetch_candles(sig["symbol"], iv, 96, int(ref + 2 * signals._MS[iv] * 1000))
+        ps.assign(sd, sigs, now)
+    print(f"{day} slots: {sd['slots']} | assigned: {[v['sig']['symbol'] + ('' if not v['posted'] else '✓') for v in sd['assigned'].values()]}")
+    changed = True
+    for slot, v in ps.due_to_post(sd, now, delay):
+        sig = signals.find_fill(v["sig"], msgs)
+        ref = datetime.fromisoformat(sig.get("fill", {}).get("date", sig["date"])).timestamp() * 1000
+        try:
+            candles, src = signals.fetch_candles(sig["symbol"], iv, 96)       # up to NOW, so the chart shows what happened since
+        except Exception as e:
+            print(f"{sig['symbol']}: no candles ({e}); will retry next run"); continue
         candles = signals.normalize_candles(candles, sig["entries"][0])
         if candles is None:
-            print(f"Skipping {sig['symbol']}: exchange prices don't match the signal's price scale."); continue
-        path = f"out/signal_{sig['id']}.png"
-        signal_chart.signal_chart(sig, candles, iv, src, path)
-        cap, tags = signals.signal_caption(sig)
-        print(cap, "\nImage:", path)
-        if a.demo or config.DRY_RUN:
-            print("[DRY RUN] nothing posted.\n"); continue
-        from src import publish
-        publish.telegram_photo(path, cap)
-        publish.discord_post([path], f"{sig['base']} {sig['side']} | R:R 1:{signals.risk_reward(sig)['final_rr']}\n{tags}")
-        publish.x_post([path], f"⚡ #{sig['base']} {sig['side']} | R:R 1:{signals.risk_reward(sig)['final_rr']} | SL & TPs on chart", " ".join(tags.split()[:3]))
-        posted.add(sig["id"]); os.makedirs("data", exist_ok=True); json.dump(sorted(posted), open(state_path, "w"))
+            print(f"Skipping {sig['symbol']}: exchange prices don't match the signal's price scale."); v["posted"] = True; continue
+        if _post_signal(sig, (candles, src), iv, ps.trade_status(sig, candles, ref), delay, a):
+            v["posted"] = True
+    if not config.DRY_RUN:
+        ps.save(state)
 
 
 def run_scenario(a):

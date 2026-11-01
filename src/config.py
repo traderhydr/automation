@@ -30,3 +30,10 @@ EXECUTION_NOTE = env("EXECUTION_NOTE", "Executed via Cornix")
 SIGNAL_INTERVAL = env("SIGNAL_INTERVAL", "15m")                 # candle size on the signal chart
 SIGNAL_MAX_AGE_MIN = int(env("SIGNAL_MAX_AGE_MIN", "45") or 45)  # never post a signal older than this
 SCENARIO_INTERVAL = env("SCENARIO_INTERVAL", "1h")
+# Free-channel teaser policy (private channel is paid): N random signals/day, posted after a delay.
+PUBLIC_SIGNALS_PER_DAY = int(env("PUBLIC_SIGNALS_PER_DAY", "2") or 0)   # 0 = every signal (still delayed)
+PUBLIC_SIGNAL_DELAY_MIN = int(env("PUBLIC_SIGNAL_DELAY_MIN", "30") or 0)
+PUBLIC_WINDOW_START = int(env("PUBLIC_WINDOW_START", "8") or 8)         # local hour, inclusive
+PUBLIC_WINDOW_END = int(env("PUBLIC_WINDOW_END", "22") or 22)           # local hour, exclusive
+PREMIUM_LINK = env("PREMIUM_LINK")                                       # where to subscribe / contact for premium
+RANDOM_SECRET = env("RANDOM_SECRET", "change-me")                        # keeps the daily random times unpredictable
