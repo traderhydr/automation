@@ -14,6 +14,13 @@ fetch.py (Telethon)  →  parse.py (regex + Claude fallback)  →  stats.py  →
 5. Real dry run: `python main.py` with `DRY_RUN=1`. When happy, set `DRY_RUN=0`.
 6. Schedule: add the same values as GitHub repo **secrets** (and `CHANNEL_NAME`, `JOIN_LINK`, `DRY_RUN` as **variables**); `.github/workflows/daily.yml` runs it every weekday.
 
+## Report periods & X (Twitter)
+`python main.py --period daily|weekly|monthly|yearly` — rolling windows of 1 / 7 / 30 / 365 days. Yearly bar charts are per month.
+The workflow runs daily (Mon–Fri), weekly (Sat), monthly (1st) and yearly (1 Jan); use *Run workflow* to trigger any period by hand.
+Weekly/monthly/yearly use the saved `data/trades.json` history, so they only get as long as the history you have collected.
+
+**X setup:** create an app at developer.x.com, set permissions to *Read and Write*, generate the access token/secret (after changing permissions), and fill `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_SECRET`. Posts are ≤280 chars with 3 hashtags and up to 4 images. The free API tier may block image upload; the code then falls back to a text-only post.
+
 ## Trade message format
 Closed-trade messages like `#BTCUSDT LONG closed ✅ +3.2%`, `ETH/USDT short SL hit -1.5%`, `XAUUSD BUY TP2 +1.8R` parse by regex.
 Other formats fall back to Claude. Adjust `src/parse.py` to match your real posts.

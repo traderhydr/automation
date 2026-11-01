@@ -1,8 +1,17 @@
-name: Daily trade report
+name: Trade reports
 on:
   schedule:
-    - cron: "30 20 * * 1-5"   # 20:30 UTC Mon-Fri – change to your market close
+    - cron: "30 20 * * 1-5"   # daily   – 20:30 UTC Mon-Fri (set to your market close)
+    - cron: "0 9 * * 6"       # weekly  – Saturday 09:00 UTC
+    - cron: "0 9 1 * *"       # monthly – 1st of month 09:00 UTC (covers the last 30 days)
+    - cron: "0 9 1 1 *"       # yearly  – 1 Jan 09:00 UTC (covers the last 365 days)
   workflow_dispatch:
+    inputs:
+      period:
+        description: Report period
+        type: choice
+        options: [daily, weekly, monthly, yearly]
+        default: daily
 permissions:
   contents: write
 jobs:
@@ -13,7 +22,17 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -r requirements.txt
-      - run: python main.py
+      - name: Pick period
+        id: p
+        run: |
+          case "${{ github.event.schedule }}" in
+            "0 9 * * 6")  echo "period=weekly"  >> $GITHUB_OUTPUT ;;
+            "0 9 1 * *")  echo "period=monthly" >> $GITHUB_OUTPUT ;;
+            "0 9 1 1 *")  echo "period=yearly"  >> $GITHUB_OUTPUT ;;
+            "")           echo "period=${{ inputs.period }}" >> $GITHUB_OUTPUT ;;
+            *)            echo "period=daily"   >> $GITHUB_OUTPUT ;;
+          esac
+      - run: python main.py --period ${{ steps.p.outputs.period }}
         env:
           TG_API_ID: ${{ secrets.TG_API_ID }}
           TG_API_HASH: ${{ secrets.TG_API_HASH }}
@@ -30,7 +49,6 @@ jobs:
           CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
           JOIN_LINK: ${{ vars.JOIN_LINK }}
           DRY_RUN: ${{ vars.DRY_RUN || '1' }}
-      # keep trade history between runs
       - run: |
           git config user.name "report-bot"; git config user.email "bot@users.noreply.github.com"
           git add -f data/trades.json && git commit -m "update trade history" && git push || true

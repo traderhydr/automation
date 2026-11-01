@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 
 
-def compute(trades):
+def compute(trades, bucket="day"):
     """trades: list of trade dicts (any period). Returns stats dict."""
     n = len(trades)
     pnls = [t["pnl_pct"] for t in trades]
@@ -11,7 +11,8 @@ def compute(trades):
     gross_win, gross_loss = sum(wins), -sum(losses)
     daily = defaultdict(float)
     for t in trades:
-        daily[datetime.fromisoformat(t["date"]).date().isoformat()] += t["pnl_pct"]
+        d = datetime.fromisoformat(t["date"]).date().isoformat()
+        daily[d[:7] if bucket == "month" else d] += t["pnl_pct"]
     days = sorted(daily)
     equity, run, peak, max_dd = [], 0.0, 0.0, 0.0
     for d in days:

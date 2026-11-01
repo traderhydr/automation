@@ -1,11 +1,12 @@
 """Daily pipeline: fetch -> parse -> stats -> charts -> captions -> publish.
 
-  python main.py                 # real run (honours DRY_RUN)
+  python main.py --period daily|weekly|monthly|yearly   # real run (honours DRY_RUN)
   python main.py --demo          # fake sample data, no Telegram/API needed (DRY ONLY, never posted)
 """
 import argparse, json, os, random
 from datetime import datetime, timedelta, timezone
 from src import config, stats, charts, caption
+from src.periods import PERIODS
 
 
 def load_history(path="data/trades.json"):
@@ -28,7 +29,8 @@ def demo_trades():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true")
-    ap.add_argument("--hours", type=int, default=24)
+    ap.add_argument("--period", choices=list(PERIODS), default="daily")
+    ap.add_argument("--hours", type=int, default=24, help="how far back to fetch new messages")
     a = ap.parse_args()
     os.makedirs("out", exist_ok=True)
 
@@ -47,21 +49,21 @@ def main():
     def within(days):
         cut = now - timedelta(days=days)
         return [t for t in history if datetime.fromisoformat(t["date"]) >= cut]
-    today, month = stats.compute(within(1)), stats.compute(within(30))
+    days, bucket = PERIODS[a.period][0], PERIODS[a.period][1]
+    today, month = stats.compute(within(days), bucket), stats.compute(within(30))
     if today["trades"] == 0:
-        print("No closed trades in the last 24h – nothing to post."); return
+        print(f"No closed trades in the {a.period} window – nothing to post."); return
 
-    paths = charts.build_all(today, month, "out")
-    cap = caption.make_captions(today, month)
+    paths = charts.build_all(today, month, a.period, "out")
+    cap = caption.make_captions(today, month, a.period)
     print(cap["telegram"]); print("\nImages:", paths)
 
     if a.demo or config.DRY_RUN:
         print("\n[DRY RUN] nothing posted."); return
     from src import publish
     publish.telegram_post(paths, cap["telegram"])
-    x_text = f"{cap['short']}\n{cap['tags']}"
     publish.discord_post(paths, cap["short"] + "\n" + cap["tags"])
-    publish.x_post(paths, x_text)
+    publish.x_post(paths, cap["short"], cap["x_tags"])
     print("Posted.")
 
 

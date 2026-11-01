@@ -21,6 +21,11 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 - `.github/workflows/daily.yml` – weekday cron, persists `data/trades.json`
 - `.env.example`, `README.md`
 
+## Update – periods + X
+- Added `--period daily|weekly|monthly|yearly` (`src/periods.py`), period-aware charts/captions, X posting (3 hashtags, 4 images, text-only fallback), and workflow schedules for all four periods.
+- Verified only with `--demo` for all periods; X posting untested (needs keys; free tier may block media).
+- History starts empty on a fresh install, so longer reports need time (or a backfill: `python main.py --hours 8760` once).
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).

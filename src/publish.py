@@ -29,13 +29,24 @@ def discord_post(paths, text):
                       files={"file": f}).raise_for_status()
 
 
-def x_post(paths, text):
+def x_post(paths, text, tags=""):
+    """Post to X with up to 4 images. Needs X API keys (user-context OAuth 1.0a, read+write).
+    Note: X's free API tier may not allow media upload; if so the post falls back to text-only."""
     import os
     keys = [os.getenv(k) for k in ("X_API_KEY", "X_API_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_SECRET")]
     if not all(keys):
-        return
+        print("X: keys not set, skipping."); return
     import tweepy
-    auth = tweepy.OAuth1UserHandler(*keys)
-    media = [tweepy.API(auth).media_upload(p).media_id for p in paths[:4]]
-    tweepy.Client(consumer_key=keys[0], consumer_secret=keys[1], access_token=keys[2],
-                  access_token_secret=keys[3]).create_tweet(text=text[:280], media_ids=media)
+    body = text.strip()
+    if tags and len(body) + 1 + len(tags) <= 280:
+        body = f"{body}\n{tags}"
+    body = body[:280]
+    client = tweepy.Client(consumer_key=keys[0], consumer_secret=keys[1],
+                           access_token=keys[2], access_token_secret=keys[3])
+    try:
+        api = tweepy.API(tweepy.OAuth1UserHandler(*keys))
+        media = [api.media_upload(p).media_id for p in paths[:4]]
+        client.create_tweet(text=body, media_ids=media)
+    except tweepy.errors.Forbidden as e:
+        print("X media upload not permitted on this API tier, posting text only:", e)
+        client.create_tweet(text=body)
