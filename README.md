@@ -37,6 +37,11 @@ Candles come from free public APIs (Binance → Bybit → OKX → Gate; Binance 
 `.github/workflows/signals.yml` checks every 10 min (GitHub may delay it); for instant posting run `python main.py --signals --hours 1` in a loop on your own server.
 **Heads-up:** this publishes your signals publicly, i.e. what paying members get, and at the same moment. Consider a delay if the private channel is a paid product.
 
+## Market outlook chart (bounce vs dump) – `python main.py --scenario BTCUSDT,ETHUSDT`
+Candles (1h) → swing highs/lows → clustered into **resistance**, a **support zone** and a **major support**; 24h change/high/low/volume are computed from the candles.
+The chart shows both scenarios (bounce toward resistance / dump toward major support) with a "Key Level in Focus" note whose wording adapts to whether price is above, inside or below the zone.
+Captions say plainly that levels are algorithmic scenarios, not predictions. `.github/workflows/outlook.yml` posts daily (05:15 UTC; set repo variable `OUTLOOK_SYMBOLS`).
+
 ## Trade message format (non-Cornix)
 Closed-trade messages like `#BTCUSDT LONG closed ✅ +3.2%`, `ETH/USDT short SL hit -1.5%`, `XAUUSD BUY TP2 +1.8R` parse by regex.
 Other formats fall back to Claude. Adjust `src/parse.py` to match your real posts.

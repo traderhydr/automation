@@ -76,9 +76,36 @@ def run_signals(a):
         posted.add(sig["id"]); os.makedirs("data", exist_ok=True); json.dump(sorted(posted), open(state_path, "w"))
 
 
+def run_scenario(a):
+    """Support/resistance 'bounce vs dump' chart per symbol, posted to the public channel."""
+    from src import signals, scenario, scenario_chart
+    from src.signal_chart import fmt
+    for sym in [s.strip().upper() for s in a.scenario.split(",") if s.strip()]:
+        base, iv = sym.replace("USDT", ""), config.SCENARIO_INTERVAL
+        if a.demo:
+            _, cs = demo_signal_data(); cs = [(t, o * 19000, h * 19000, l * 19000, c * 19000, 1500) for t, o, h, l, c, _ in cs]
+            src = "demo"
+        else:
+            cs, src = signals.fetch_candles(sym, iv, 100)
+        if len(cs) < 40:
+            print(f"{sym}: not enough candles"); continue
+        lv = scenario.analyse(cs)
+        path = f"out/scenario_{base}.png"
+        scenario_chart.scenario_chart(base, cs, lv, iv, src, path)
+        cap, tags = scenario.scenario_caption(base, lv, fmt)
+        print(cap, "\nImage:", path)
+        if a.demo or config.DRY_RUN:
+            print("[DRY RUN] nothing posted.\n"); continue
+        from src import publish
+        publish.telegram_photo(path, cap)
+        publish.discord_post([path], f"{base} outlook\n{tags}")
+        publish.x_post([path], f"📊 #{base} outlook: {fmt(lv['last'])} ({lv['chg24']:+.2f}% 24h). Support {fmt(lv['zone_mid'])} | Resistance {fmt(lv['resistance'])}. Bounce or dump? 👇", " ".join(tags.split()[:3]))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true")
+    ap.add_argument("--scenario", metavar="SYMBOLS", help="market outlook chart(s), e.g. BTCUSDT,ETHUSDT")
     ap.add_argument("--signals", action="store_true", help="post charts for NEW signals instead of a report")
     ap.add_argument("--period", choices=list(PERIODS), default="daily")
     ap.add_argument("--hours", type=int, default=24, help="how far back to fetch new messages")
@@ -86,6 +113,8 @@ def main():
     os.makedirs("out", exist_ok=True)
     if a.signals:
         return run_signals(a)
+    if a.scenario:
+        return run_scenario(a)
 
     if a.demo:
         history = demo_trades()

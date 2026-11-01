@@ -1,0 +1,28 @@
+name: Market outlook chart
+on:
+  schedule:
+    - cron: "15 5 * * *"      # daily 05:15 UTC – change to taste
+  workflow_dispatch:
+    inputs:
+      symbols: { description: "Comma separated, e.g. BTCUSDT,ETHUSDT", default: "BTCUSDT" }
+permissions:
+  contents: read
+jobs:
+  outlook:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - run: python main.py --scenario "${{ inputs.symbols || vars.OUTLOOK_SYMBOLS || 'BTCUSDT' }}"
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          PUBLIC_CHANNEL: ${{ secrets.PUBLIC_CHANNEL }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
+          DRY_RUN: ${{ vars.DRY_RUN || '1' }}

@@ -29,3 +29,4 @@ LEVERAGE_NOTE = env("LEVERAGE_NOTE", "Leveraged returns")  # e.g. "Returns with 
 EXECUTION_NOTE = env("EXECUTION_NOTE", "Executed via Cornix")
 SIGNAL_INTERVAL = env("SIGNAL_INTERVAL", "15m")                 # candle size on the signal chart
 SIGNAL_MAX_AGE_MIN = int(env("SIGNAL_MAX_AGE_MIN", "45") or 45)  # never post a signal older than this
+SCENARIO_INTERVAL = env("SCENARIO_INTERVAL", "1h")

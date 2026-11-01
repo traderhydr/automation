@@ -39,6 +39,11 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 - R:R = reward to each TP / distance Entry1→SL (ORDI sample: TP1 0.12R … TP4 1.1R, risk 5.12%). Candle APIs unreachable from the dev sandbox -> only parsers mocked + chart tested on synthetic candles; live fetch UNTESTED.
 - Still to do: BTC support/resistance scenario chart (reference #2) not built; confirm with user whether signals should be delayed (paid members).
 
+## Update – BTC scenario chart
+- Built `src/scenario.py` (pivot clustering -> resistance / support zone / major support, 24h stats), `src/scenario_chart.py`, `main.py --scenario SYMBOLS`, `.github/workflows/outlook.yml`. All 3 user reference post types now exist (daily results grid, signal chart, scenario chart).
+- Tested on synthetic candles only (exchange APIs blocked in sandbox). Levels are heuristic; wording is conditional, not predictive.
+- Next: real-data dry run by user; decide signal delay for paid members; update docs/tune styles after seeing real output.
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).
