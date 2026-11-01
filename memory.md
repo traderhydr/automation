@@ -78,7 +78,7 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 ## Update – real sample #2 (INJ)
 - Real final win wording is 'All targets achieved 😎' (NOT 'All take-profit targets achieved'): parser missed it -> fixed in cornix.FINAL. Regression tests in `tests/test_parse.py` (run `python -m unittest discover tests`) cover real posts: all-targets win, trailing-stop close, opposite-direction close (profit and loss), ignored partial/entry posts, signal R:R.
 - Final profit already cumulative for the trade (TP3 28.3% -> final 39.8%), so counting only the final post is right.
-- 'Stop Target Hit' wording still UNVERIFIED (assumed). Ask user for a real stop-loss post.
+- Real stop-loss post received & VERIFIED: `#AAVE/USDT Stop Target Hit ⛔ / Loss: 109.0687% 📉` (SHORT, 25X cross; loss can exceed 100% of margin). Also 'All entries achieved' is a harmless partial post. Tests added.
 
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.

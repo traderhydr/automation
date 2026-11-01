@@ -40,6 +40,20 @@ class RealPosts(unittest.TestCase):
                               "#WIF/USDT Take-Profit target 1 ✅\nProfit: 15.302% 📈\nPeriod: 3 hr 51 min ⏰"))
         self.assertEqual(t, [])
 
+    def test_stop_target_hit_is_negative_loss_even_over_100_percent(self):
+        aave = ("⚡ SABBOT REAL ⚡\n\n🧠 Strategy: MACD Cross\n🪙 Pair: AAVEUSDT\n🧭 Direction: SHORT\n⚙️ Leverage: Cross 25X\n"
+                "🎯 Entry: 133.60-134.00-137.25-139.52\n💰 Take Profits: 132.80-131.53-129.52-126.04\n🛑 Stop Loss: 140.49")
+        t = parse_trades(msgs(aave, "#AAVE/USDT Entry 1 ✅\nAverage Entry Price: 133.6 💵",
+                              "#AAVE/USDT All entries achieved\nAverage Entry Price: 134.62 💵",
+                              "#AAVE/USDT Stop Target Hit ⛔\nLoss: 109.0687% 📉"))
+        self.assertEqual([(x["symbol"], x["side"], x["pnl_pct"]) for x in t], [("AAVEUSDT", "SHORT", -109.0687)])
+
+    def test_short_signal_rr(self):
+        aave = ("🪙 Pair: AAVEUSDT\n🧭 Direction: SHORT\n⚙️ Leverage: Cross 25X\n🎯 Entry: 133.60-134.00-137.25-139.52\n"
+                "💰 Take Profits: 132.80-131.53-129.52-126.04\n🛑 Stop Loss: 140.49")
+        rr = risk_reward(parse_signals(msgs(aave))[0])
+        self.assertEqual((rr["risk_pct"], rr["tps"][0]["rr"], rr["final_rr"]), (5.16, 0.12, 1.1))
+
     def test_signal_rr(self):
         s = parse_signals(msgs(INJ_SIGNAL))[0]
         rr = risk_reward(s)
