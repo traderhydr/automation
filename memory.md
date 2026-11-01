@@ -53,6 +53,9 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 - Simulated a full day of runs: exactly 2 posts/day, >=30 min delay. Real run untested.
 - User must set: PREMIUM_LINK, RANDOM_SECRET (GitHub secret). Results reports (daily etc.) still use ALL trades (not only the 2 teasers) – ask user if that is what they want publicly.
 
+## Update – free samples are IMMEDIATE
+- User decision: the 2 random free signals/day post IMMEDIATELY (no delay) so members can try them live. `PUBLIC_SIGNAL_DELAY_MIN` default is now 0 (still configurable). Caption says 'free sample from our premium channel' + PREMIUM_LINK. Supersedes the 30-min delay in the previous update.
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).

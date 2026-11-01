@@ -51,13 +51,13 @@ def _post_signal(sig, status_candles_src, iv, status, delay_min, a):
         print("[DRY RUN] nothing posted.\n"); return False
     rr = signals.risk_reward(sig)["final_rr"]
     publish.telegram_photo(path, cap)
-    publish.discord_post([path], f"{sig['base']} {sig['side']} | R:R 1:{rr} (delayed teaser)\n{tags}")
-    publish.x_post([path], f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | shared {delay_min} min after premium members. Details on chart 👇", " ".join(tags.split()[:3]))
+    publish.discord_post([path], f"{sig['base']} {sig['side']} | R:R 1:{rr} (free sample)\n{tags}")
+    publish.x_post([path], f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | free sample from our premium channel. Entry, TPs & SL on chart 👇" if not delay_min else f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | shared {delay_min} min after premium members. Details on chart 👇", " ".join(tags.split()[:3]))
     return True
 
 
 def run_signals(a):
-    """FREE-channel teaser: N random signals/day, each posted DELAY min after it went out in the paid channel."""
+    """FREE-channel samples: N random signals/day, posted immediately (or DELAY min later if PUBLIC_SIGNAL_DELAY_MIN > 0)."""
     from src import signals, public_signals as ps
     iv, delay = config.SIGNAL_INTERVAL, config.PUBLIC_SIGNAL_DELAY_MIN
     if a.demo:
@@ -66,7 +66,7 @@ def run_signals(a):
         cs = signals.normalize_candles(demo_cs, sig["entries"][0])
         ref = datetime.fromisoformat(sig["fill"]["date"]).timestamp() * 1000 - 3 * 900000
         status = ps.trade_status(sig, cs, ref)
-        _post_signal(sig, (cs, "demo"), iv, status, delay or 30, a); return
+        _post_signal(sig, (cs, "demo"), iv, status, delay, a); return
 
     from src.fetch import fetch_messages
     tz = ZoneInfo(config.TIMEZONE)

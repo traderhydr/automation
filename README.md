@@ -33,12 +33,12 @@ Your own signal template (`Pair:` / `Direction:`) is recognised for the long/sho
 **Leverage:** with 25x, per-trade ROI can be +20% while the account moves a fraction of that, and adding ROIs overstates account growth. Set `MARGIN_PER_TRADE_PCT` (e.g. `2`) to report account return; charts print the basis in the footer.
 Trades are de-duplicated by Telegram message id, so overlapping daily/weekly runs never double count.
 
-## Signal charts (QNT-style) – free-channel teaser, `python main.py --signals`
+## Signal charts (QNT-style) – free-channel samples, `python main.py --signals`
 Your private channel is paid, so the public channel only gets a **teaser**: `PUBLIC_SIGNALS_PER_DAY` (default **2**) random signals per day,
-each posted `PUBLIC_SIGNAL_DELAY_MIN` (default **30**) minutes after it appeared in the premium channel.
+each posted **immediately** (`PUBLIC_SIGNAL_DELAY_MIN=0`) so people can try it live; set e.g. `30` to delay free posts after the premium post.
 - **Random picks:** each day N random times are drawn between `PUBLIC_WINDOW_START`–`END` (08:00–22:00, ≥90 min apart, seeded by `RANDOM_SECRET`); the first new signal after each time is the pick. Not cherry-picked, so wins and losses both show.
 - **Chart:** candles up to the moment of posting, entry marker ("OPENED HERE" when Cornix reported the fill), entries, TP1-n, SL and the **R:R** (reward to each TP ÷ distance Entry 1 → SL).
-- **Caption:** levels + R:R + honest **status so far** (open / TPn reached / stopped out) + "shared 30 min after entry – premium got this live" + `PREMIUM_LINK`.
+- **Caption:** levels + R:R + honest **status so far** (open / TPn reached / stopped out) + "free sample from our premium channel" (or the delay note if a delay is set) + `PREMIUM_LINK`.
 - State in `data/public_signals.json` (slots, picked signals) so nothing is posted twice. `PUBLIC_SIGNALS_PER_DAY=0` = every signal, still delayed.
 - Candles: Binance → Bybit → OKX → Gate (Binance blocks US IPs like GitHub runners). Scale mismatches (1000PEPE…) are fixed or the signal is skipped.
 - `.github/workflows/signals.yml` runs every 10 min (GitHub may delay it); `python main.py --signals --demo` renders a sample.

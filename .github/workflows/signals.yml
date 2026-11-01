@@ -31,7 +31,7 @@ jobs:
           SIGNAL_INTERVAL: ${{ vars.SIGNAL_INTERVAL || '15m' }}
           TIMEZONE: ${{ vars.TIMEZONE || 'Asia/Karachi' }}
           PUBLIC_SIGNALS_PER_DAY: ${{ vars.PUBLIC_SIGNALS_PER_DAY || '2' }}
-          PUBLIC_SIGNAL_DELAY_MIN: ${{ vars.PUBLIC_SIGNAL_DELAY_MIN || '30' }}
+          PUBLIC_SIGNAL_DELAY_MIN: ${{ vars.PUBLIC_SIGNAL_DELAY_MIN || '0' }}
           PREMIUM_LINK: ${{ vars.PREMIUM_LINK }}
           RANDOM_SECRET: ${{ secrets.RANDOM_SECRET }}
           DRY_RUN: ${{ vars.DRY_RUN || '1' }}

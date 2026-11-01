@@ -121,7 +121,9 @@ def signal_caption(sig, status=None, delay_min=None, premium_link=""):
     elif status and "_then_stop" in status:
         stat = f"✅ TP{status[2:status.index('_')]} reached, then stopped"
     delay = (f"🕒 <i>Shared {delay_min} min after entry – premium members got this live.</i>\n"
-             + (f"🔒 Get every signal in real time: {premium_link}\n" if premium_link else "")) if delay_min else ""
+             + (f"🔒 Get every signal in real time: {premium_link}\n" if premium_link else "")) if delay_min else \
+            ("🎁 <i>Free sample from our premium channel – you can take it live.</i>\n"
+             + (f"🔒 Premium members get every signal: {premium_link}\n" if premium_link else ""))
     body = (f"⚡ <b>#{sig['base']} {sig['side']}</b>{lev} {side_emoji}\n\n"
             f"🎯 Entry: {ents}\n💰 TPs: {tps}\n🛑 SL: {fmt(sig['sl'])}\n\n"
             f"⚖️ <b>R:R 1:{rr['final_rr']}</b> (to TP{len(rr['tps'])}) · risk {rr['risk_pct']}% price move\n"
