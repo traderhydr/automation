@@ -4,9 +4,10 @@
   python main.py --demo          # fake sample data, no Telegram/API needed (DRY ONLY, never posted)
 """
 import argparse, json, os, random
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from src import config, stats, charts, caption
-from src.periods import PERIODS
+from src.periods import PERIODS, window
 
 
 def load_history(path="data/trades.json"):
@@ -108,7 +109,9 @@ def main():
     ap.add_argument("--scenario", metavar="SYMBOLS", help="market outlook chart(s), e.g. BTCUSDT,ETHUSDT")
     ap.add_argument("--signals", action="store_true", help="post charts for NEW signals instead of a report")
     ap.add_argument("--period", choices=list(PERIODS), default="daily")
-    ap.add_argument("--hours", type=int, default=24, help="how far back to fetch new messages")
+    ap.add_argument("--hours", type=int, default=30, help="how far back to fetch new messages")
+    ap.add_argument("--force", action="store_true", help="post even if this exact report was already posted")
+    ap.add_argument("--date", help="any date (YYYY-MM-DD) inside the period to report; default today (in TIMEZONE)")
     a = ap.parse_args()
     os.makedirs("out", exist_ok=True)
     if a.signals:
@@ -130,17 +133,26 @@ def main():
 
     scale = config.MARGIN_PER_TRADE_PCT / 100
     history = [{**t, "pnl_pct": t["pnl_pct"] * scale} for t in history]
-    now = datetime.now(timezone.utc)
-    def within(days):
-        cut = now - timedelta(days=days)
-        return [t for t in history if datetime.fromisoformat(t["date"]) >= cut]
-    days, bucket = PERIODS[a.period][0], PERIODS[a.period][1]
-    today, month = stats.compute(within(days), bucket), stats.compute(within(30))
+    tz = ZoneInfo(config.TIMEZONE)
+    ref = date.fromisoformat(a.date) if a.date else datetime.now(tz).date()
+    start, end, label = window(a.period, ref, tz)
+    # work in local time so "a day" means a calendar day in TIMEZONE
+    local = [{**t, "date": datetime.fromisoformat(t["date"]).astimezone(tz).isoformat()} for t in history]
+    inside = lambda t, s, e: s <= datetime.fromisoformat(t["date"]) < e
+    bucket = PERIODS[a.period][1]
+    today = stats.compute([t for t in local if inside(t, start, end)], bucket)
+    month = stats.compute([t for t in local if inside(t, end - timedelta(days=30), end)])
+    rkey = f"{a.period}:{start:%Y-%m-%d}"
+    rpath = "data/posted_reports.json"
+    done = set(json.load(open(rpath))) if os.path.exists(rpath) else set()
+    if rkey in done and not a.force and not a.demo and not config.DRY_RUN:
+        print(f"{rkey} was already posted – skipping (use --force to repost)."); return
+    print(f"{a.period} report {label} ({start:%Y-%m-%d %H:%M} -> {end:%Y-%m-%d %H:%M} {config.TIMEZONE}): {today['trades']} trades")
     if today["trades"] == 0:
-        print(f"No closed trades in the {a.period} window – nothing to post."); return
+        print("No closed trades in this window – nothing to post."); return
 
-    paths = charts.build_all(today, month, a.period, "out")
-    cap = caption.make_captions(today, month, a.period)
+    paths = charts.build_all(today, month, a.period, "out", label)
+    cap = caption.make_captions(today, month, a.period, label)
     print(cap["telegram"]); print("\nImages:", paths)
 
     if a.demo or config.DRY_RUN:
@@ -149,6 +161,7 @@ def main():
     publish.telegram_post(paths, cap["telegram"])
     publish.discord_post(paths, cap["short"] + "\n" + cap["tags"])
     publish.x_post(paths, cap["short"], cap["x_tags"])
+    done.add(rkey); os.makedirs("data", exist_ok=True); json.dump(sorted(done), open(rpath, "w"))
     print("Posted.")
 
 

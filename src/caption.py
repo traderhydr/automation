@@ -10,11 +10,10 @@ DISCLAIMER = "⚠️ Past performance does not guarantee future results. Trading
 PERIOD_LABEL = {"daily": "Today", "weekly": "This week", "monthly": "This month", "yearly": "This year"}
 
 
-def _fallback(today, month, period="daily"):
+def _fallback(today, month, period="daily", label=""):
     from datetime import datetime
     emoji = "🔥" if today["total_pct"] >= 0 else "📉"
-    when = datetime.fromisoformat(today["last"]).strftime("%d %b %Y").upper() if today["last"] else ""
-    head = {"daily": f"📊 <b>{when} · DAILY RESULTS</b>"}.get(period, f"📊 <b>{period.upper()} RESULTS</b>")
+    head = f"📊 <b>{label} · {period.upper()} RESULTS</b>"
     return {
         "telegram": (f"{head}\n\n✅ <b>{today['wins']}/{today['trades']}</b> trades in profit\n"
                      f"{emoji} Total: <b>{today['total_pct']:+.2f}%</b>\n"
@@ -26,9 +25,9 @@ def _fallback(today, month, period="daily"):
     }
 
 
-def make_captions(today, month, period="daily"):
+def make_captions(today, month, period="daily", label=""):
     if not config.ANTHROPIC_API_KEY:
-        c = _fallback(today, month, period)
+        c = _fallback(today, month, period, label)
     else:
         import anthropic
         client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
@@ -37,7 +36,7 @@ def make_captions(today, month, period="daily"):
         prompt = (
             f"You write social posts for a trading signals channel called '{config.CHANNEL_NAME}'. "
             f"Join link: {config.JOIN_LINK}\n{period.upper()} report stats: {json.dumps(facts)}\nContext (30-day) stats: {json.dumps(facts30)}\n\n"
-            f"This is the {period} report" + (" (a whole year: celebrate the milestone, stay humble)" if period == "yearly" else "") + ". "
+            f"This is the {period} report for {label}" + (" (a whole year: celebrate the milestone, stay humble)" if period == "yearly" else "") + ". "
             "STYLE: confident, punchy, short lines, emojis like 📊✅🔥📈, headline with the date/period, then X/Y in profit and total. Always include a transparency line (all closed trades, losses included, leveraged returns). Include #DailyResults. "
             "Write: (1) 'telegram': an energetic, emoji-rich post in Telegram HTML (<b>, <i> only), max 700 chars, "
             "ending with a call-to-action to join. (2) 'short': under 240 chars for X/Twitter, with the join link. "
@@ -51,7 +50,7 @@ def make_captions(today, month, period="daily"):
             t = r.content[0].text
             c = json.loads(t[t.index("{"): t.rindex("}") + 1])
         except Exception:
-            c = _fallback(today, month, period)
+            c = _fallback(today, month, period, label)
     tags = " ".join(dict.fromkeys(c.get("hashtags") or BASE_TAGS))
     c["telegram"] = f"{c['telegram']}\n\n{tags}\n\n{DISCLAIMER}"
     c["tags"] = tags

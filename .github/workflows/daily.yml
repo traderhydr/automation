@@ -1,38 +1,55 @@
 name: Trade reports
+# Runs hourly but only does work between 00:00 and 02:59 local time (TIMEZONE var, default UTC); posted_reports.json stops repeats,
+# so a delayed/skipped GitHub run is caught up on the next hour:
+#   every day            -> daily report for the day that just ended
+#   Monday 00:xx         -> weekly report for the Mon-Sun week that just ended (i.e. "Sunday's" report)
+#   1st of the month     -> monthly report for the month that just ended
+#   1 January            -> yearly report for the year that just ended
 on:
   schedule:
-    - cron: "30 20 * * 1-5"   # daily   – 20:30 UTC Mon-Fri (set to your market close)
-    - cron: "0 9 * * 6"       # weekly  – Saturday 09:00 UTC
-    - cron: "0 9 1 * *"       # monthly – 1st of month 09:00 UTC (covers the last 30 days)
-    - cron: "0 9 1 1 *"       # yearly  – 1 Jan 09:00 UTC (covers the last 365 days)
+    - cron: "10 * * * *"
   workflow_dispatch:
     inputs:
       period:
-        description: Report period
+        description: Run one report now for the current period (leave 'auto' for the normal gate)
         type: choice
-        options: [daily, weekly, monthly, yearly]
-        default: daily
+        options: [auto, daily, weekly, monthly, yearly]
+        default: auto
 permissions:
   contents: write
+concurrency: { group: reports, cancel-in-progress: false }
 jobs:
   report:
     runs-on: ubuntu-latest
+    env:
+      TIMEZONE: ${{ vars.TIMEZONE || 'UTC' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
-      - run: pip install -r requirements.txt
-      - name: Pick period
-        id: p
+      - name: Is it report time?
+        id: gate
         run: |
-          case "${{ github.event.schedule }}" in
-            "0 9 * * 6")  echo "period=weekly"  >> $GITHUB_OUTPUT ;;
-            "0 9 1 * *")  echo "period=monthly" >> $GITHUB_OUTPUT ;;
-            "0 9 1 1 *")  echo "period=yearly"  >> $GITHUB_OUTPUT ;;
-            "")           echo "period=${{ inputs.period }}" >> $GITHUB_OUTPUT ;;
-            *)            echo "period=daily"   >> $GITHUB_OUTPUT ;;
-          esac
-      - run: python main.py --period ${{ steps.p.outputs.period }}
+          export TZ="$TIMEZONE"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.period }}" != "auto" ]; then
+            echo "jobs=${{ inputs.period }}:$(date +%F)" >> $GITHUB_OUTPUT; exit 0
+          fi
+          case "$(date +%H)" in 00|01|02) ;; *) false ;; esac || { echo "Not the post-midnight window (00:00-02:59) in $TIMEZONE – nothing to do."; exit 0; }
+          y=$(date -d yesterday +%F); jobs="daily:$y"
+          [ "$(date -d yesterday +%u)" = "7" ] && jobs="$jobs weekly:$y"        # yesterday was Sunday
+          [ "$(date +%d)" = "01" ]             && jobs="$jobs monthly:$y"       # yesterday was month end
+          [ "$(date +%m-%d)" = "01-01" ]       && jobs="$jobs yearly:$y"        # yesterday was 31 Dec
+          echo "jobs=$jobs" >> $GITHUB_OUTPUT
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.jobs != ''
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.jobs != ''
+        with: { python-version: "3.12" }
+      - if: steps.gate.outputs.jobs != ''
+        run: pip install -r requirements.txt
+      - name: Build and post reports
+        if: steps.gate.outputs.jobs != ''
+        run: |
+          for j in ${{ steps.gate.outputs.jobs }}; do
+            python main.py --period "${j%%:*}" --date "${j##*:}"
+          done
         env:
           TG_API_ID: ${{ secrets.TG_API_ID }}
           TG_API_HASH: ${{ secrets.TG_API_HASH }}
@@ -48,7 +65,10 @@ jobs:
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
           CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
           JOIN_LINK: ${{ vars.JOIN_LINK }}
+          MARGIN_PER_TRADE_PCT: ${{ vars.MARGIN_PER_TRADE_PCT || '100' }}
           DRY_RUN: ${{ vars.DRY_RUN || '1' }}
-      - run: |
+      - name: Save trade history
+        if: steps.gate.outputs.jobs != ''
+        run: |
           git config user.name "report-bot"; git config user.email "bot@users.noreply.github.com"
-          git add -f data/trades.json && git commit -m "update trade history" && git push || true
+          git add -f data/trades.json data/posted_reports.json 2>/dev/null; git add -f data/trades.json && git commit -m "update trade history" && git pull --rebase -q && git push || true

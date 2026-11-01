@@ -19,9 +19,9 @@ def _footer(fig):
              ha="center", fontsize=9, color="#7f8db0")
 
 
-def summary_card(st, ctx, period, path):
+def summary_card(st, ctx, period, path, label=None):
     """Big shareable scoreboard. st = stats for the period, ctx = 30-day stats (used for daily only)."""
-    title, label = PERIODS[period][2], PERIODS[period][4]
+    title = PERIODS[period][2] + (f" · {label}" if label else "")
     _style()
     fig = plt.figure(figsize=(8, 8))
     fig.text(0.5, 0.92, config.CHANNEL_NAME.upper(), ha="center", fontsize=20, weight="bold", color=ACC)
@@ -82,13 +82,13 @@ def bars(st, period, path):
     plt.close(fig)
 
 
-def build_all(st, ctx, period, outdir):
+def build_all(st, ctx, period, outdir, label=None):
     """Returns image paths. daily: card + 30-day charts; others: card + charts for the period itself."""
     paths = [f"{outdir}/summary.png"]
     if period == "daily" and 0 < st["trades"] <= 40:
-        results_grid(st, paths[0])
+        results_grid(st, paths[0], label)
     else:
-        summary_card(st, ctx, period, paths[0])
+        summary_card(st, ctx, period, paths[0], label)
     series = ctx if period == "daily" else st
     cpd = "monthly" if period == "daily" else period
     if len(series["days"]) >= 2:

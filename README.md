@@ -15,6 +15,10 @@ fetch.py (Telethon)  →  parse.py (regex + Claude fallback)  →  stats.py  →
 6. Schedule: add the same values as GitHub repo **secrets** (and `CHANNEL_NAME`, `JOIN_LINK`, `DRY_RUN` as **variables**); `.github/workflows/daily.yml` runs it every weekday.
 
 ## Report periods & X (Twitter)
+**Schedule (calendar periods, in your `TIMEZONE`):** daily report when the day ends; weekly when Sunday ends (Mon–Sun week); monthly when the month's last day ends; yearly when 31 Dec ends. The workflow checks hourly and posts in the first window after local midnight (00:00–02:59, catches up if GitHub skipped a run); `data/posted_reports.json` prevents duplicates. Manual run for any date: `python main.py --period weekly --date 2026-11-01` (add `--force` to repost). Set repo variable `TIMEZONE` (e.g. `Asia/Kolkata`; default UTC).
+
+(Older text below mentions rolling windows – superseded by the above.)
+
 `python main.py --period daily|weekly|monthly|yearly` — rolling windows of 1 / 7 / 30 / 365 days. Yearly bar charts are per month.
 The workflow runs daily (Mon–Fri), weekly (Sat), monthly (1st) and yearly (1 Jan); use *Run workflow* to trigger any period by hand.
 Weekly/monthly/yearly use the saved `data/trades.json` history, so they only get as long as the history you have collected.

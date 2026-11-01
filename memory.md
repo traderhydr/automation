@@ -44,6 +44,10 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 - Tested on synthetic candles only (exchange APIs blocked in sandbox). Levels are heuristic; wording is conditional, not predictive.
 - Next: real-data dry run by user; decide signal delay for paid members; update docs/tune styles after seeing real output.
 
+## Update – calendar schedule
+- Reports now cover CALENDAR periods in `TIMEZONE` (day / Mon-Sun week / month / year), posted right after the period ends: hourly workflow gate (00-02h local) in `.github/workflows/daily.yml`, de-dupe via `data/posted_reports.json`, `--date`/`--force` flags. Gate logic verified with simulated dates; real Actions run untested.
+- USER STILL NEEDS TO SET `TIMEZONE` (unknown). Note: signals workflow every 10 min can exceed GitHub free minutes on private repos.
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).
