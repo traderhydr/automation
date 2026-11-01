@@ -19,3 +19,8 @@ CHANNEL_NAME = env("CHANNEL_NAME", "My Trading Signals")
 JOIN_LINK = env("JOIN_LINK")
 TIMEZONE = env("TIMEZONE", "UTC")
 DRY_RUN = env("DRY_RUN", "1") == "1"
+# Cornix % are ROI on each trade's own margin (already x leverage). If each trade uses e.g. 2% of your account,
+# set MARGIN_PER_TRADE_PCT=2 so reports show ACCOUNT return (sum of roi * 2%). 100 = report raw per-trade ROI.
+MARGIN_PER_TRADE_PCT = float(env("MARGIN_PER_TRADE_PCT", "100") or 100)
+PNL_NOTE = env("PNL_NOTE", "Leveraged ROI on margin" if MARGIN_PER_TRADE_PCT == 100 else
+               f"Account return, {MARGIN_PER_TRADE_PCT:g}% margin/trade")

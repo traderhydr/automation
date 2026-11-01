@@ -25,6 +25,8 @@ Weekly/monthly/yearly use the saved `data/trades.json` history, so they only get
 `src/cornix.py` reads the updates the Cornix bot posts in your channel. A trade is counted **once**, when it reaches a final state
 (`All take-profit targets achieved`, `Stop Target Hit`, `Closed due to ...`) using the `Profit:` / `Loss:` % Cornix shows.
 Intermediate `Take-Profit target N` and entry messages are ignored. Cornix % normally already includes leverage, so label your posts accordingly.
+Your own signal template (`Pair:` / `Direction:`) is recognised for the long/short side, and closes such as `Closed at trailing stoploss after reaching take profit` and `Closed due to opposite direction signal` count as final results.
+**Leverage:** with 25x, per-trade ROI can be +20% while the account moves a fraction of that, and adding ROIs overstates account growth. Set `MARGIN_PER_TRADE_PCT` (e.g. `2`) to report account return; charts print the basis in the footer.
 Trades are de-duplicated by Telegram message id, so overlapping daily/weekly runs never double count.
 
 ## Trade message format (non-Cornix)

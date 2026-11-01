@@ -46,6 +46,8 @@ def main():
         history += [t for t in new if key(t) not in seen]
         save_history(history)
 
+    scale = config.MARGIN_PER_TRADE_PCT / 100
+    history = [{**t, "pnl_pct": t["pnl_pct"] * scale} for t in history]
     now = datetime.now(timezone.utc)
     def within(days):
         cut = now - timedelta(days=days)

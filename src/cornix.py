@@ -17,10 +17,13 @@ import re
 PAIR = re.compile(r"#?\b([A-Z0-9]{2,15})\s*/\s*([A-Z0-9]{2,10})\b")
 PNL = re.compile(r"\b(profit|loss|profit/loss|p/l|roi)\b\s*[:=]?\s*([+-]?\d+(?:[.,]\d+)?)\s*%", re.I)
 SIGNAL_SIDE = re.compile(r"signal type\s*:?\s*[^\n(]*\((long|short)\)", re.I)
-SIGNAL_MARK = re.compile(r"signal type|entry orders|entry zone|entry targets?\b|take-profit targets?\s*:", re.I)
+SIGNAL_MARK = re.compile(r"signal type|entry orders|entry zone|entry targets?\b|take-profit targets?\s*:|^\W*pair\s*:", re.I | re.M)
+# your own signal template: "🪙 Pair: ORDIUSDT" / "🧭 Direction: LONG"
+OWN_PAIR = re.compile(r"pair\s*:\s*#?([A-Z0-9]{2,15}?)(?:/)?(USDT|USDC|USD|BUSD)\b", re.I)
+OWN_DIR = re.compile(r"direction\s*:\s*(long|short)", re.I)
 FINAL = re.compile(r"all take-profit targets? (?:achieved|reached|hit)|stop(?:-| )?(?:loss|target)? (?:target )?hit|"
                    r"stop target|closed (?:due to|at|manually|by)|closed", re.I)
-PARTIAL = re.compile(r"take-profit target \d+|tp ?\d+ (?:hit|reached|achieved)|entry target \d+|entry \d+ (?:achieved|reached)|"
+PARTIAL = re.compile(r"entry \d+|take-profit target \d+|tp ?\d+ (?:hit|reached|achieved)|entry target \d+|entry \d+ (?:achieved|reached)|"
                      r"entry (?:order )?(?:achieved|filled)|cancelled|canceled|moved to break", re.I)
 
 
@@ -35,14 +38,17 @@ def parse_cornix(messages):
         p, s = PAIR.search(m["text"]), SIGNAL_SIDE.search(m["text"])
         if p and s:
             sides[p.group(1) + p.group(2)] = s.group(1).upper()
+        op, od = OWN_PAIR.search(m["text"]), OWN_DIR.search(m["text"])
+        if op and od:
+            sides[op.group(1).upper() + op.group(2).upper()] = od.group(1).upper()
     trades, handled = [], set()
     for m in messages:
         t = m["text"]
-        if not is_cornix(t):
+        if not (is_cornix(t) or OWN_PAIR.search(t)):
             continue
         handled.add(m["id"])
-        if SIGNAL_MARK.search(t) and not PNL.search(t):
-            continue  # new signal
+        if (SIGNAL_MARK.search(t) or OWN_PAIR.search(t)) and not PNL.search(t):
+            continue  # new signal post
         p, pnl = PAIR.search(t), PNL.search(t)
         if not (p and pnl):
             continue

@@ -29,6 +29,11 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 ## Update – Cornix
 - User's channel contains **Cornix** bot updates. Added `src/cornix.py` (final-state-only counting, side from signal post, dedupe by message id). Tested only on self-written samples in the remembered Cornix layout – NOT on real messages. Need real samples to confirm wording (esp. single-TP trades, partial TP then stop, leverage in %).
 
+## Update – real samples (SABBOT REAL)
+- User pasted real posts: custom signal template (`Pair:`/`Direction:`/`Leverage: Cross 25X`) + Cornix updates (Entry n, Take-Profit target n, `Closed at trailing stoploss after reaching take profit`, `Closed due to opposite direction signal`, `Stop Target Hit` assumed). Parser updated and verified on these; counts only final closes (trades still open / only partial TP are excluded).
+- Leverage 25x: added `MARGIN_PER_TRADE_PCT` + `PNL_NOTE` (chart footer). ASK USER what % of account each trade uses.
+- Channel branding: `CHANNEL_NAME=SABBOT`.
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).

@@ -15,7 +15,7 @@ def _style():
 
 
 def _footer(fig):
-    fig.text(0.5, 0.012, f"{config.CHANNEL_NAME} • Past results ≠ future returns • Not financial advice",
+    fig.text(0.5, 0.012, f"{config.CHANNEL_NAME} • {config.PNL_NOTE} • Past results ≠ future returns • Not financial advice",
              ha="center", fontsize=9, color="#7f8db0")
 
 
