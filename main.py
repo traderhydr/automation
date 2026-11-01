@@ -41,8 +41,9 @@ def main():
         from src.parse import parse_trades
         new = parse_trades(fetch_messages(a.hours))
         history = load_history()
-        seen = {(t["date"], t["symbol"], t["side"], t["pnl_pct"]) for t in history}
-        history += [t for t in new if (t["date"], t["symbol"], t["side"], t["pnl_pct"]) not in seen]
+        key = lambda t: t.get("id") or (t["date"], t["symbol"], t["pnl_pct"])
+        seen = {key(t) for t in history}
+        history += [t for t in new if key(t) not in seen]
         save_history(history)
 
     now = datetime.now(timezone.utc)

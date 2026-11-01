@@ -21,7 +21,13 @@ Weekly/monthly/yearly use the saved `data/trades.json` history, so they only get
 
 **X setup:** create an app at developer.x.com, set permissions to *Read and Write*, generate the access token/secret (after changing permissions), and fill `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_SECRET`. Posts are ≤280 chars with 3 hashtags and up to 4 images. The free API tier may block image upload; the code then falls back to a text-only post.
 
-## Trade message format
+## Cornix
+`src/cornix.py` reads the updates the Cornix bot posts in your channel. A trade is counted **once**, when it reaches a final state
+(`All take-profit targets achieved`, `Stop Target Hit`, `Closed due to ...`) using the `Profit:` / `Loss:` % Cornix shows.
+Intermediate `Take-Profit target N` and entry messages are ignored. Cornix % normally already includes leverage, so label your posts accordingly.
+Trades are de-duplicated by Telegram message id, so overlapping daily/weekly runs never double count.
+
+## Trade message format (non-Cornix)
 Closed-trade messages like `#BTCUSDT LONG closed ✅ +3.2%`, `ETH/USDT short SL hit -1.5%`, `XAUUSD BUY TP2 +1.8R` parse by regex.
 Other formats fall back to Claude. Adjust `src/parse.py` to match your real posts.
 

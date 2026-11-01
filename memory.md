@@ -26,6 +26,9 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 - Verified only with `--demo` for all periods; X posting untested (needs keys; free tier may block media).
 - History starts empty on a fresh install, so longer reports need time (or a backfill: `python main.py --hours 8760` once).
 
+## Update – Cornix
+- User's channel contains **Cornix** bot updates. Added `src/cornix.py` (final-state-only counting, side from signal post, dedupe by message id). Tested only on self-written samples in the remembered Cornix layout – NOT on real messages. Need real samples to confirm wording (esp. single-TP trades, partial TP then stop, leverage in %).
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).

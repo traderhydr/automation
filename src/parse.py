@@ -9,6 +9,7 @@ Trade record: {date, symbol, side, pnl_pct}   (pnl_pct = result in %, +/-)
 """
 import json, re
 from . import config
+from .cornix import parse_cornix
 
 R_TO_PCT = 1.0
 SYMBOL = re.compile(r"#?\b([A-Z]{2,10}(?:/|-)?(?:USDT|USD|USDC|BTC|INR|EUR|JPY)?)\b")
@@ -36,7 +37,7 @@ def _regex_parse(msg):
     if re.search(r"\b(sl hit|stop(ped)? ?loss hit|loss)\b", t, re.I) and pnl > 0 and "+" not in m.group(0):
         pnl = -pnl
     sym = next((s.group(1) for s in SYMBOL.finditer(t.upper()) if s.group(1) not in STOPWORDS), "UNKNOWN")
-    return {"date": msg["date"], "symbol": sym.replace("/", "").replace("-", ""),
+    return {"id": msg["id"], "date": msg["date"], "symbol": sym.replace("/", "").replace("-", ""),
             "side": side.group(1).upper(), "pnl_pct": pnl}
 
 
@@ -63,7 +64,7 @@ def _claude_parse(msgs):
     for row in rows:
         try:
             m = msgs[int(row["i"])]
-            out.append({"date": m["date"], "symbol": str(row["symbol"]).upper(),
+            out.append({"id": m["id"], "date": m["date"], "symbol": str(row["symbol"]).upper(),
                         "side": str(row["side"]).upper(), "pnl_pct": float(row["pnl_pct"])})
         except Exception:
             continue
@@ -71,8 +72,12 @@ def _claude_parse(msgs):
 
 
 def parse_trades(messages):
-    trades, leftovers = [], []
+    # 1) Cornix bot posts (primary source); 2) generic regex; 3) Claude for anything left
+    trades, handled = parse_cornix(messages)
+    leftovers = []
     for m in messages:
+        if m["id"] in handled:
+            continue
         t = _regex_parse(m)
         if t:
             trades.append(t)
