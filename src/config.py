@@ -22,7 +22,7 @@ CONTACT_LINK = env("CONTACT_LINK")            # your Telegram DM / support, e.g.
 X_LINK = env("X_LINK", "https://x.com/Trader_Hydr")
 YOUTUBE_LINK = env("YOUTUBE_LINK", "https://youtube.com/@traderhydr")
 BLOFIN_REF_LINK = env("BLOFIN_REF_LINK", "https://partner.blofin.com/d/HYDR")
-COPY_TRADING_LINK = env("COPY_TRADING_LINK")
+COPY_TRADING_LINK = env("COPY_TRADING_LINK", "https://blofin.com/copy-trade/details/50803037201?module=futures")
 BINANCE_CREATOR_LINK = env("BINANCE_CREATOR_LINK", "https://app.binance.com/uni-qr/cpro/ZenithX?l=en&r=VUUMW0NT&uc=app_square_share_link&us=copylink")
 TIMEZONE = env("TIMEZONE", "Asia/Karachi")
 DRY_RUN = env("DRY_RUN", "1") == "1"
