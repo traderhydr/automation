@@ -98,3 +98,46 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 3. Run a real dry run, review output, then set `DRY_RUN=0`.
 4. Possible additions: Instagram/LinkedIn image sizes, weekly/monthly recap, per-symbol charts.
 5. Reminder to user: finance/crypto promotion rules (SEBI/SEC/FCA, platform ad policies) – check local regulations.
+
+
+---
+## HANDOFF – end of session 1 (2026-11-01)  <-- READ THIS FIRST TOMORROW
+
+### State of the project
+Everything is built, pushed on branch `claude/exciting-ride-xlyjqw`, and tested ONLY on demo / synthetic data and the user's pasted real posts. NOTHING has run against real Telegram, real exchange prices, X, or GitHub Actions. No PR opened. `DRY_RUN=1` by default (nothing posts).
+Unit tests: `python -m unittest discover tests` (8 tests, real Cornix post wordings) – all pass.
+
+### What exists (all post types)
+1. Daily/weekly/monthly/yearly results reports – calendar periods in GMT+5 (Asia/Karachi), posted just after the period ends (hourly gate 00-02h local, de-dupe in data/posted_reports.json). Daily card = tile grid (<=40 trades) else summary card. Free-sample trades get a gold star; losses always shown.
+2. Signal chart (QNT-style, entry marker + TP/SL + R:R) – only 2 RANDOM signals/day go public, posted IMMEDIATELY (delay setting default 0), caption says "free sample from premium" + DM @Hydrzoro. Teasers logged in data/teasers.json.
+3. BTC support/resistance "bounce vs dump" scenario chart (`--scenario BTCUSDT`), daily workflow.
+4. Links block under every post (free channel, X, YouTube, copy trading, BloFin ref, Binance creator, premium = DM @Hydrzoro) + auto referral disclosure.
+5. Branding: "Trader Hydr" + round logo assets/logo.jpg.
+6. CSV backfill: `python -m src.import_csv export.csv --tz UTC --until DATE`; `main.py --no-fetch` builds reports from saved history.
+
+### User facts
+- Telegram free channel https://t.me/ZoroTradez (PUBLIC_CHANNEL=@ZoroTradez, bot must be admin); premium joined by DM @Hydrzoro; X @Trader_Hydr; YouTube @traderhydr; GitHub repo traderhydr/automation.
+- Private channel is PAID. Signals: own "SABBOT REAL" template + Cornix bot updates. Verified wordings: `All targets achieved 😎` (win), `Stop Target Hit ⛔ / Loss: 109.07%` (stop), `Closed at trailing stoploss after reaching take profit`, `Closed due to opposite direction signal`. Leverage 15x/25x cross; losses can exceed 100% of margin.
+- Cornix CSV export analysed: 1,348 finished trades in 4 days (~340/day), 73.8% wins, PF 3.14, raw ROI sum +15,518%; 1 Nov partial day was negative (38% wins).
+
+### OPEN QUESTIONS (ask user first thing)
+1. Headline number: raw per-trade ROI sum (+15,518% looks misleading) vs ACCOUNT RETURN (`MARGIN_PER_TRADE_PCT`, e.g. 1-2% margin/trade) – what % of account does each trade use? Recommended: account return.
+2. Time zone of the CSV Date column (assumed UTC). Is the CSV the same stream as the public posts (chat "Botbac")?
+3. Daily card at ~340 trades/day: build compact version (counts + top winners/losers)?
+4. Logo is third-party anime fan art (Zoro) – OK, or make an original Trader Hydr logo?
+
+### USER STILL MUST PROVIDE / DO (secrets go in GitHub secrets, never in chat)
+- `TG_API_ID`, `TG_API_HASH`, `TG_SESSION_STRING` (run `python -m src.make_session` locally once), `PRIVATE_CHANNEL`
+- `TG_BOT_TOKEN` (BotFather), `PUBLIC_CHANNEL=@ZoroTradez` (bot = admin there)
+- `ANTHROPIC_API_KEY` (optional: AI captions; template fallback works without)
+- X keys (`X_API_KEY/SECRET`, `X_ACCESS_TOKEN/SECRET`; app needs Read+Write; free tier may block image upload -> text-only fallback)
+- `RANDOM_SECRET` (any random text, GitHub secret) – keeps daily random teaser times unpredictable
+- optional: `DISCORD_WEBHOOK_URL`, `MARGIN_PER_TRADE_PCT`, `assets/hero.jpg`
+- Repo should be PRIVATE (trade history is committed by the workflows).
+
+### Known risks / TODO next session
+- First real dry run: `DRY_RUN=1 python main.py --period daily` + `--signals --hours 6` + `--scenario BTCUSDT` on a machine with network; check live candle fetch (Binance->Bybit->OKX->Gate, Binance blocks US IPs incl. GitHub runners), chart levels, caption lengths, then set DRY_RUN=0.
+- GitHub Actions: signals.yml runs every 10 min (may exceed free minutes on private repos; consider small VPS loop). Scheduled runs can be delayed; reports catch up within 3h.
+- Teaser<->trade matching is best-effort (coin + time, <=14 days) because Cornix close posts carry no signal id.
+- Mistake fixed: .gitignore was accidentally emptied; restored. Generated images/caches untracked (history still has demo images + 3 aggregate charts from the real CSV).
+- Legal/ToS: finance & crypto promotion rules, X/Meta ad policies; every post carries risk disclaimer; referral links carry disclosure.
