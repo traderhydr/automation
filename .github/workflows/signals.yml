@@ -32,8 +32,14 @@ jobs:
           TIMEZONE: ${{ vars.TIMEZONE || 'Asia/Karachi' }}
           PUBLIC_SIGNALS_PER_DAY: ${{ vars.PUBLIC_SIGNALS_PER_DAY || '2' }}
           PUBLIC_SIGNAL_DELAY_MIN: ${{ vars.PUBLIC_SIGNAL_DELAY_MIN || '0' }}
-          PREMIUM_LINK: ${{ vars.PREMIUM_LINK }}
           RANDOM_SECRET: ${{ secrets.RANDOM_SECRET }}
+          TELEGRAM_LINK: ${{ vars.TELEGRAM_LINK }}
+          CONTACT_LINK: ${{ vars.CONTACT_LINK }}
+          X_LINK: ${{ vars.X_LINK }}
+          BLOFIN_REF_LINK: ${{ vars.BLOFIN_REF_LINK }}
+          COPY_TRADING_LINK: ${{ vars.COPY_TRADING_LINK }}
+          BINANCE_CREATOR_LINK: ${{ vars.BINANCE_CREATOR_LINK }}
+          PREMIUM_LINK: ${{ vars.PREMIUM_LINK }}
           DRY_RUN: ${{ vars.DRY_RUN || '1' }}
       - run: |
           git config user.name "report-bot"; git config user.email "bot@users.noreply.github.com"

@@ -71,6 +71,7 @@ def human(v):
 
 
 def scenario_caption(base, lv, fmt):
+    from . import links
     k1, k2 = key_level_text(base, lv, fmt)
     ch = lv["chg24"]; arrow = "🔴" if ch < 0 else "🟢"
     tags = f"#{base} #{base}USDT #CryptoAnalysis #Bitcoin #TradingSetup" if base == "BTC" else f"#{base} #{base}USDT #CryptoAnalysis #TradingSetup"
@@ -80,4 +81,5 @@ def scenario_caption(base, lv, fmt):
             f"🟢 <b>Bounce:</b> support holds → room toward {fmt(lv['resistance'])}\n"
             f"🔴 <b>Dump:</b> support breaks → retest near {fmt(lv['major'])}\n\n"
             f"💡 {k1} {k2}\n\n{tags}\n"
-            f"⚠️ Levels are algorithmic scenarios, not predictions or financial advice."), tags
+            + (links.telegram_block() + "\n\n" if links.telegram_block() else "")
+            + "⚠️ Levels are algorithmic scenarios, not predictions or financial advice."), tags

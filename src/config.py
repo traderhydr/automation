@@ -16,7 +16,13 @@ ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
 CLAUDE_MODEL = env("CLAUDE_MODEL", "claude-sonnet-5-5")
 DISCORD_WEBHOOK_URL = env("DISCORD_WEBHOOK_URL")
 CHANNEL_NAME = env("CHANNEL_NAME", "My Trading Signals")
-JOIN_LINK = env("JOIN_LINK")
+TELEGRAM_LINK = env("TELEGRAM_LINK")          # your public Telegram channel / contact
+JOIN_LINK = env("JOIN_LINK") or TELEGRAM_LINK
+CONTACT_LINK = env("CONTACT_LINK")            # your Telegram DM / support, e.g. https://t.me/yourusername
+X_LINK = env("X_LINK")
+BLOFIN_REF_LINK = env("BLOFIN_REF_LINK")
+COPY_TRADING_LINK = env("COPY_TRADING_LINK")
+BINANCE_CREATOR_LINK = env("BINANCE_CREATOR_LINK")
 TIMEZONE = env("TIMEZONE", "Asia/Karachi")
 DRY_RUN = env("DRY_RUN", "1") == "1"
 # Cornix % are ROI on each trade's own margin (already x leverage). If each trade uses e.g. 2% of your account,

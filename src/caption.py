@@ -62,7 +62,9 @@ def make_captions(today, month, period="daily", label=""):
         except Exception:
             c = _fallback(today, month, period, label)
     tags = " ".join(dict.fromkeys(c.get("hashtags") or BASE_TAGS))
-    c["telegram"] = f"{c['telegram']}\n\n{tags}\n\n{DISCLAIMER}"
+    from . import links
+    c["links_tg"], c["links_plain"] = links.telegram_block(), links.plain_block()
+    c["telegram"] = f"{c['telegram']}\n\n{tags}\n\n" + (c["links_tg"] + "\n\n" if c["links_tg"] else "") + DISCLAIMER
     c["tags"] = tags
     c["x_tags"] = " ".join(list(dict.fromkeys(c.get("hashtags") or BASE_TAGS))[:3])
     return c

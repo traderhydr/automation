@@ -110,6 +110,7 @@ def fetch_candles(symbol, interval="15m", limit=96, end_ms=None):
 def signal_caption(sig, status=None, delay_min=None, premium_link=""):
     rr = risk_reward(sig)
     from .signal_chart import fmt
+    from . import links
     side_emoji = "🟢" if sig["side"] == "LONG" else "🔴"
     tps = " → ".join(fmt(t["price"]) for t in rr["tps"])
     ents = " / ".join(fmt(e) for e in sig["entries"])
@@ -128,7 +129,8 @@ def signal_caption(sig, status=None, delay_min=None, premium_link=""):
             f"🎯 Entry: {ents}\n💰 TPs: {tps}\n🛑 SL: {fmt(sig['sl'])}\n\n"
             f"⚖️ <b>R:R 1:{rr['final_rr']}</b> (to TP{len(rr['tps'])}) · risk {rr['risk_pct']}% price move\n"
             + (f"📌 Status: <b>{stat}</b>\n" if stat else "") + "\n" + delay + f"\n{tags}\n"
-            "⚠️ Not financial advice. Leveraged trading carries high risk. Not every trade wins.")
+            + (links.telegram_block() + "\n\n" if links.telegram_block() else "")
+            + "⚠️ Not financial advice. Leveraged trading carries high risk. Not every trade wins.")
     return body, tags
 
 
