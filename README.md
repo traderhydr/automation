@@ -22,6 +22,10 @@ Set as repo **variables** (or `.env`): `TELEGRAM_LINK` (free channel), `PREMIUM_
 Referral/affiliate links automatically get a "I may earn a commission" disclosure line (required by most platforms and regulators). On X the links go in a reply under the post to keep the main post clean.
 Don't paste your private channel's open invite link anywhere public – use a join-request link or a payment/bot link so only paying members get in. Long captions (>1024 chars) are sent as a message right after the photo so nothing is cut off.
 
+## Backfill from a Cornix CSV export
+`python -m src.import_csv export.csv --tz UTC --until 2026-11-02` loads every signal that **entered and finished** (open trades and never-entered signals are skipped) into `data/trades.json`, so weekly / monthly / yearly reports have history from day one.
+Use `--until` to stop where the live Telegram pipeline starts (different ids, so overlap would double count). Build a report from saved history only: `python main.py --no-fetch --period weekly --date 2026-11-01`.
+
 ## Honesty rules for reports
 - Every report uses **all** closed trades, wins and losses (never only the teasers); cards and captions say "losses included".
 - The free sample signals (the 2 random ones posted each day) are **highlighted** in the results: a gold ★ outline on their tile in the daily grid, plus a line like `★ Free samples shared with you: OP +19.73% · BTC -44.01% · 1 still open`. Losing samples are shown exactly like winning ones.

@@ -80,6 +80,11 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 - Final profit already cumulative for the trade (TP3 28.3% -> final 39.8%), so counting only the final post is right.
 - Real stop-loss post received & VERIFIED: `#AAVE/USDT Stop Target Hit ⛔ / Loss: 109.0687% 📉` (SHORT, 25X cross; loss can exceed 100% of margin). Also 'All entries achieved' is a harmless partial post. Tests added.
 
+## Update – Cornix CSV export analysed (1,411 signals, 28 Oct-1 Nov 2026, chat 'Botbac')
+- 1,348 entered+finished (995W/353L, 73.8% win, avg win +22.9 / avg loss -20.5, raw ROI sum +15,518%, PF 3.14), 50 still open, 13 never entered. ~340 closed trades/day -> tile grid unusable (>40 falls back to summary card). 1 Nov (partial day) was negative: -240% ROI, 38% wins.
+- Raw ROI sum across hundreds of trades is NOT an account return (headline '+15517.90%' is misleading): recommend MARGIN_PER_TRADE_PCT / account-return mode. USER HAS NOT YET ANSWERED which to show.
+- Added `src/import_csv.py` (backfill) and `main.py --no-fetch`; `HISTORY_PATH` env. CSV not stored in repo. Timezone of CSV Date column unknown (asked/assumed UTC).
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).

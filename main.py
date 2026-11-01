@@ -10,11 +10,13 @@ from src import config, stats, charts, caption
 from src.periods import PERIODS, window
 
 
-def load_history(path="data/trades.json"):
+def load_history(path=None):
+    path = path or os.getenv("HISTORY_PATH", "data/trades.json")
     return json.load(open(path)) if os.path.exists(path) else []
 
 
-def save_history(trades, path="data/trades.json"):
+def save_history(trades, path=None):
+    path = path or os.getenv("HISTORY_PATH", "data/trades.json")
     os.makedirs("data", exist_ok=True)
     json.dump(trades, open(path, "w"), indent=1)
 
@@ -130,6 +132,7 @@ def run_scenario(a):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true")
+    ap.add_argument("--no-fetch", action="store_true", help="build the report from saved history only (no Telegram)")
     ap.add_argument("--scenario", metavar="SYMBOLS", help="market outlook chart(s), e.g. BTCUSDT,ETHUSDT")
     ap.add_argument("--signals", action="store_true", help="post charts for NEW signals instead of a report")
     ap.add_argument("--period", choices=list(PERIODS), default="daily")
@@ -145,6 +148,8 @@ def main():
 
     if a.demo:
         history = demo_trades()
+    elif a.no_fetch:
+        history = load_history()
     else:
         from src.fetch import fetch_messages
         from src.parse import parse_trades
