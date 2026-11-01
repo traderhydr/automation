@@ -14,6 +14,12 @@ fetch.py (Telethon)  →  parse.py (regex + Claude fallback)  →  stats.py  →
 5. Real dry run: `python main.py` with `DRY_RUN=1`. When happy, set `DRY_RUN=0`.
 6. Schedule: add the same values as GitHub repo **secrets** (and `CHANNEL_NAME`, `JOIN_LINK`, `DRY_RUN` as **variables**); `.github/workflows/daily.yml` runs it every weekday.
 
+## Honesty rules for reports
+- Every report uses **all** closed trades, wins and losses (never only the teasers); cards and captions say "losses included".
+- The free sample signals (the 2 random ones posted each day) are **highlighted** in the results: a gold ★ outline on their tile in the daily grid, plus a line like `★ Free samples shared with you: OP +19.73% · BTC -44.01% · 1 still open`. Losing samples are shown exactly like winning ones.
+- Weekly/monthly/yearly cards show the samples' running tally (`★ Free samples: 31W / 9L`) over the whole period; teasers are logged permanently in `data/teasers.json`.
+- A teaser's result is matched to the first close of the same coin after the signal (Cornix close posts have no signal id), so overlapping trades on one coin can be mismatched — rare, but worth knowing.
+
 ## Report periods & X (Twitter)
 **Schedule (calendar periods, in your `TIMEZONE`):** daily report when the day ends; weekly when Sunday ends (Mon–Sun week); monthly when the month's last day ends; yearly when 31 Dec ends. The workflow checks hourly and posts in the first window after local midnight (00:00–02:59, catches up if GitHub skipped a run); `data/posted_reports.json` prevents duplicates. Manual run for any date: `python main.py --period weekly --date 2026-11-01` (add `--force` to repost). Set repo variable `TIMEZONE` (e.g. `Asia/Kolkata`; default UTC).
 

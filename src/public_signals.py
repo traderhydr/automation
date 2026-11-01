@@ -71,3 +71,47 @@ def trade_status(sig, candles, ref_ms):
         if hit_sl:
             return f"tp{reached}_then_stop" if reached else "stopped"
     return f"tp{reached}" if reached else "open"
+
+
+# ---------- permanent log of free-channel teasers, so reports can highlight their real outcome ----------
+LOG = "data/teasers.json"
+
+
+def log_teaser(sig, path=LOG):
+    log = json.load(open(path)) if os.path.exists(path) else []
+    if not any(t["id"] == sig["id"] for t in log):
+        log.append({"id": sig["id"], "symbol": sig["symbol"], "side": sig["side"], "date": sig["date"]})
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        json.dump(log, open(path, "w"), indent=1)
+
+
+def load_teasers(path=LOG):
+    return json.load(open(path)) if os.path.exists(path) else []
+
+
+def mark_teasers(trades, teasers, max_days=14):
+    """Flag (t['teaser']=True) the first closed trade on the same coin after each teaser signal.
+    Cornix close posts carry no signal id, so this is a best-effort match by coin + time (<= max_days)."""
+    used = set()
+    order = sorted(range(len(trades)), key=lambda i: trades[i]["date"])
+    for tz_ in sorted(teasers, key=lambda x: x["date"]):
+        t0 = datetime.fromisoformat(tz_["date"])
+        for i in order:
+            t = trades[i]
+            if i in used or t["symbol"] != tz_["symbol"]:
+                continue
+            td = datetime.fromisoformat(t["date"])
+            if td >= t0 and td - t0 <= timedelta(days=max_days):
+                t["teaser"] = True; used.add(i); break
+    return trades
+
+
+def open_teasers(teasers, trades, start, end):
+    """Teasers posted inside [start,end) whose trade has not closed by `end` (honest 'still open' count)."""
+    closed = {(t["symbol"]) for t in trades if t.get("teaser")}
+    n = 0
+    for tz_ in teasers:
+        d = datetime.fromisoformat(tz_["date"])
+        if start <= d < end and not any(t.get("teaser") and t["symbol"] == tz_["symbol"] and datetime.fromisoformat(t["date"]) >= d for t in trades):
+            n += 1
+    return n

@@ -56,6 +56,9 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 ## Update – free samples are IMMEDIATE
 - User decision: the 2 random free signals/day post IMMEDIATELY (no delay) so members can try them live. `PUBLIC_SIGNAL_DELAY_MIN` default is now 0 (still configurable). Caption says 'free sample from our premium channel' + PREMIUM_LINK. Supersedes the 30-min delay in the previous update.
 
+## Update – honesty / teaser highlight
+- User: reports include ALL trades, losses included, and HIGHLIGHT the 2 free teaser trades (honesty). Implemented: `data/teasers.json` permanent log (`public_signals.log_teaser`), `mark_teasers` best-effort coin+time matching (<=14d), gold star tile + footer line on daily grid, tally on other cards, caption line, 'still open' count. Tested on reference 25-trade day with a losing teaser.
+
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
 - Results are in % (no position sizing/fees).

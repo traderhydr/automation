@@ -30,6 +30,10 @@ def summary_card(st, ctx, period, path, label=None):
     fig.text(0.5, 0.67, f"{st['total_pct']:+.2f}%", ha="center", fontsize=64, weight="bold", color=col)
     fig.text(0.5, 0.60, f"{st['trades']} trades  •  {st['wins']}W / {st['losses']}L  •  "
                         f"{st['win_rate']}% win rate", ha="center", fontsize=14)
+    tz = st["teaser"]
+    if tz["closed"] or tz["open"]:
+        fig.text(0.5, 0.52, f"★ Free samples: {tz['wins']}W / {tz['losses']}L  ({tz['total']:+.1f}%)"
+                 + (f"  ·  {tz['open']} still open" if tz["open"] else "") + "  – losses included", ha="center", fontsize=12, color="#f5c22b")
     ref = ctx if period == "daily" else st
     pre = "30-DAY " if period == "daily" else ""
     pf = ref["profit_factor"] if ref["profit_factor"] is not None else "–"
@@ -140,20 +144,25 @@ def results_grid(st, path, date_label=None):
     avail = 296
     ch_ = min(50, (avail - gap * (rows - 1)) / rows)
     fs = 15 if ch_ >= 44 else 12
-    for i, (sym, v) in enumerate(items):
+    for i, (sym, v, tz_) in enumerate(items):
         r, c = divmod(i, cols)
         x, y = x_start + c * (cw + gap), y_start + r * (ch_ + gap)
         win = v >= 0
         ax.add_patch(FancyBboxPatch((x, y), cw, ch_, boxstyle="round,pad=0,rounding_size=8",
                                     fc=("#23262d" if win else "#3a2423"),
-                                    ec="none", alpha=0.93, zorder=4))
-        ax.text(x + 12, y + ch_ / 2, sym, color="#f1f3f7", fontsize=fs, weight="bold", va="center", zorder=5)
+                                    ec=GOLD if tz_ else "none", lw=2.2 if tz_ else 0, alpha=0.93, zorder=4))
+        ax.text(x + 12, y + ch_ / 2, ("★ " if tz_ else "") + sym, color="#f1f3f7", fontsize=fs, weight="bold", va="center", zorder=5)
         ax.text(x + cw - 12, y + ch_ / 2, f"{v:+.2f}%", color="#5fd38d" if win else "#f26d6d",
                 fontsize=fs, weight="bold", va="center", ha="right", zorder=5)
     if st["first"]:
         f, l = datetime.fromisoformat(st["first"]), datetime.fromisoformat(st["last"])
         ax.text(48, 600, f"Closed trades: {f:%b %d, %H:%M} – {l:%b %d, %H:%M}", color="#8b919c", fontsize=13,
                 va="center", zorder=5)
+    tz = st["teaser"]
+    if tz["closed"] or tz["open"]:
+        parts = [f"{s} {v:+.2f}%" for s, v in tz["items"]] + ([f"{tz['open']} still open"] if tz["open"] else [])
+        ax.text(48, 628, "★ Free samples shared with you: " + "  ·  ".join(parts) + "  (all trades shown)", color=GOLD, fontsize=12.5,
+                weight="bold", va="center", zorder=5)
     ax.text(48, 660, f"Sum of all closed trades, losses included  ·  {config.EXECUTION_NOTE}  ·  {config.LEVERAGE_NOTE}",
             color="#8b919c", fontsize=12.5, va="center", zorder=5)
     ax.text(W - 48, 658, "#DailyResults", color=GOLD, fontsize=13, weight="bold", va="center", ha="right", zorder=6)

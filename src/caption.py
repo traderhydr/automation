@@ -10,6 +10,15 @@ DISCLAIMER = "⚠️ Past performance does not guarantee future results. Trading
 PERIOD_LABEL = {"daily": "Today", "weekly": "This week", "monthly": "This month", "yearly": "This year"}
 
 
+def _teaser_line(st):
+    tz = st["teaser"]
+    if not (tz["closed"] or tz["open"]):
+        return ""
+    items = ", ".join(f"{s} {v:+.2f}%" + (" ✅" if v > 0 else " ❌") for s, v in tz["items"])
+    return (f"⭐ <b>Free samples we shared:</b> {items}" + (f" · {tz['open']} still open" if tz["open"] else "")
+            + f" — {tz['wins']}W/{tz['losses']}L, shown with every other trade, losses included.\n\n")
+
+
 def _fallback(today, month, period="daily", label=""):
     from datetime import datetime
     emoji = "🔥" if today["total_pct"] >= 0 else "📉"
@@ -18,7 +27,7 @@ def _fallback(today, month, period="daily", label=""):
         "telegram": (f"{head}\n\n✅ <b>{today['wins']}/{today['trades']}</b> trades in profit\n"
                      f"{emoji} Total: <b>{today['total_pct']:+.2f}%</b>\n"
                      f"📈 30-day: <b>{month['total_pct']:+.1f}%</b> · Win rate {month['win_rate']}%\n\n"
-                     f"<i>{TRANSPARENCY}</i>\n\n👉 Join: {config.JOIN_LINK}"),
+                     f"{_teaser_line(today)}<i>{TRANSPARENCY}</i>\n\n👉 Join: {config.JOIN_LINK}"),
         "short": (f"{emoji} {PERIOD_LABEL[period]}: {today['wins']}/{today['trades']} in profit, "
                   f"total {today['total_pct']:+.2f}% (losses included). Join: {config.JOIN_LINK}"),
         "hashtags": BASE_TAGS,
@@ -32,6 +41,7 @@ def make_captions(today, month, period="daily", label=""):
         import anthropic
         client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
         facts = {k: today[k] for k in ("trades", "wins", "losses", "win_rate", "total_pct", "best", "worst")}
+        facts["free_samples"] = today["teaser"]
         facts30 = {k: month[k] for k in ("trades", "win_rate", "total_pct", "profit_factor", "max_drawdown")}
         prompt = (
             f"You write social posts for a trading signals channel called '{config.CHANNEL_NAME}'. "

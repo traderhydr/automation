@@ -96,6 +96,7 @@ def run_signals(a):
             print(f"Skipping {sig['symbol']}: exchange prices don't match the signal's price scale."); v["posted"] = True; continue
         if _post_signal(sig, (candles, src), iv, ps.trade_status(sig, candles, ref), delay, a):
             v["posted"] = True
+            ps.log_teaser(sig)
     if not config.DRY_RUN:
         ps.save(state)
 
@@ -161,6 +162,14 @@ def main():
     start, end, label = window(a.period, ref, tz)
     # work in local time so "a day" means a calendar day in TIMEZONE
     local = [{**t, "date": datetime.fromisoformat(t["date"]).astimezone(tz).isoformat()} for t in history]
+    from src import public_signals as ps
+    if a.demo:   # demo: pretend one winner and one loser of the day were the free samples
+        pick = [next(t for t in local if t["pnl_pct"] > 0), next(t for t in local if t["pnl_pct"] < 0)]
+        teasers = [{"id": i, "symbol": t["symbol"], "side": t["side"],
+                    "date": (datetime.fromisoformat(t["date"]) - timedelta(minutes=30)).isoformat()} for i, t in enumerate(pick)]
+    else:
+        teasers = ps.load_teasers()
+    ps.mark_teasers(local, teasers)
     inside = lambda t, s, e: s <= datetime.fromisoformat(t["date"]) < e
     bucket = PERIODS[a.period][1]
     today = stats.compute([t for t in local if inside(t, start, end)], bucket)
@@ -170,6 +179,7 @@ def main():
     done = set(json.load(open(rpath))) if os.path.exists(rpath) else set()
     if rkey in done and not a.force and not a.demo and not config.DRY_RUN:
         print(f"{rkey} was already posted – skipping (use --force to repost)."); return
+    today["teaser"]["open"] = ps.open_teasers(teasers, local, start, end)
     print(f"{a.period} report {label} ({start:%Y-%m-%d %H:%M} -> {end:%Y-%m-%d %H:%M} {config.TIMEZONE}): {today['trades']} trades")
     if today["trades"] == 0:
         print("No closed trades in this window – nothing to post."); return

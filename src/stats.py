@@ -2,6 +2,13 @@ from collections import defaultdict
 from datetime import datetime
 
 
+def _teaser(trades):
+    ts = [t for t in trades if t.get("teaser")]
+    return {"closed": len(ts), "wins": sum(1 for t in ts if t["pnl_pct"] > 0), "losses": sum(1 for t in ts if t["pnl_pct"] < 0),
+            "total": round(sum(t["pnl_pct"] for t in ts), 2), "open": 0,
+            "items": [[t["symbol"].replace("USDT", ""), round(t["pnl_pct"], 2)] for t in ts]}
+
+
 def compute(trades, bucket="day"):
     """trades: list of trade dicts (any period). Returns stats dict."""
     n = len(trades)
@@ -33,7 +40,8 @@ def compute(trades, bucket="day"):
         "best": round(max(pnls), 2) if pnls else 0.0,
         "worst": round(min(pnls), 2) if pnls else 0.0,
         "max_drawdown": round(max_dd, 2),
-        "items": sorted(([t["symbol"].replace("USDT", ""), round(t["pnl_pct"], 2)] for t in trades), key=lambda x: -x[1]),
+        "items": sorted(([t["symbol"].replace("USDT", ""), round(t["pnl_pct"], 2), bool(t.get("teaser"))] for t in trades), key=lambda x: -x[1]),
+        "teaser": _teaser(trades),
         "first": min((t["date"] for t in trades), default=None),
         "last": max((t["date"] for t in trades), default=None),
         "days": days, "daily": [round(daily[d], 2) for d in days],
