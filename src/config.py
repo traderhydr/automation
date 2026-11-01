@@ -17,7 +17,7 @@ CLAUDE_MODEL = env("CLAUDE_MODEL", "claude-sonnet-5-5")
 DISCORD_WEBHOOK_URL = env("DISCORD_WEBHOOK_URL")
 CHANNEL_NAME = env("CHANNEL_NAME", "My Trading Signals")
 JOIN_LINK = env("JOIN_LINK")
-TIMEZONE = env("TIMEZONE", "UTC")
+TIMEZONE = env("TIMEZONE", "Asia/Karachi")
 DRY_RUN = env("DRY_RUN", "1") == "1"
 # Cornix % are ROI on each trade's own margin (already x leverage). If each trade uses e.g. 2% of your account,
 # set MARGIN_PER_TRADE_PCT=2 so reports show ACCOUNT return (sum of roi * 2%). 100 = report raw per-trade ROI.

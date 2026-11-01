@@ -1,5 +1,5 @@
 name: Trade reports
-# Runs hourly but only does work between 00:00 and 02:59 local time (TIMEZONE var, default UTC); posted_reports.json stops repeats,
+# Runs hourly but only does work between 00:00 and 02:59 local time (TIMEZONE var, default Asia/Karachi = GMT+5); posted_reports.json stops repeats,
 # so a delayed/skipped GitHub run is caught up on the next hour:
 #   every day            -> daily report for the day that just ended
 #   Monday 00:xx         -> weekly report for the Mon-Sun week that just ended (i.e. "Sunday's" report)
@@ -22,7 +22,7 @@ jobs:
   report:
     runs-on: ubuntu-latest
     env:
-      TIMEZONE: ${{ vars.TIMEZONE || 'UTC' }}
+      TIMEZONE: ${{ vars.TIMEZONE || 'Asia/Karachi' }}
     steps:
       - name: Is it report time?
         id: gate

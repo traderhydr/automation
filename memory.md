@@ -46,7 +46,7 @@ Automate a daily report from a **private Telegram trades channel**: parse closed
 
 ## Update – calendar schedule
 - Reports now cover CALENDAR periods in `TIMEZONE` (day / Mon-Sun week / month / year), posted right after the period ends: hourly workflow gate (00-02h local) in `.github/workflows/daily.yml`, de-dupe via `data/posted_reports.json`, `--date`/`--force` flags. Gate logic verified with simulated dates; real Actions run untested.
-- TIMEZONE = GMT/UTC (user confirmed; no DST, reports run 00:00-24:00 GMT; default already UTC, nothing to set). Note: signals workflow every 10 min can exceed GitHub free minutes on private repos.
+- TIMEZONE = GMT+5 -> `Asia/Karachi` (user said 'gmt' then '+5'; ASSUMED Pakistan-style UTC+5, no DST). Now the default in config + workflow. Reports run 00:00-24:00 GMT+5, post ~00:10 local = 19:10 UTC. Confirm with user if they are elsewhere on +5. Note: signals workflow every 10 min can exceed GitHub free minutes on private repos.
 
 ## Decisions / assumptions
 - Trade format is **assumed** (e.g. `#BTCUSDT LONG closed ✅ +3.2%`, `+1.8R` with 1R = 1%). Needs adjusting to the user's real messages.
