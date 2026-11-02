@@ -6,13 +6,36 @@ from telethon.sessions import StringSession
 from . import config
 
 
+async def _resolve(client, ref):
+    """PRIVATE_CHANNEL can be a numeric id (-100...), an @username, or just the channel's TITLE (e.g. 'zoro gem trades')."""
+    if ref.lstrip("-").isdigit():
+        return int(ref)
+    if ref.startswith("@") or ref.startswith("https://t.me/"):
+        return ref
+    want = ref.casefold().strip()
+    matches = []
+    async for d in client.iter_dialogs():
+        if (d.is_channel or d.is_group) and d.name.casefold().strip() == want:
+            matches.append(d)
+    if not matches:       # fall back to "contains"
+        async for d in client.iter_dialogs():
+            if (d.is_channel or d.is_group) and want in d.name.casefold():
+                matches.append(d)
+    if not matches:
+        raise SystemExit(f"No Telegram channel/group titled '{ref}' found for this account. Run: python -m src.list_channels")
+    if len(matches) > 1:
+        names = ", ".join(f"{m.name} ({m.id})" for m in matches)
+        raise SystemExit(f"'{ref}' matches several chats: {names}. Set PRIVATE_CHANNEL to the numeric id instead.")
+    return matches[0].entity
+
+
 async def _fetch(hours):
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
     chan = config.PRIVATE_CHANNEL
-    chan = int(chan) if chan.lstrip("-").isdigit() else chan
     out = []
     async with TelegramClient(StringSession(config.TG_SESSION_STRING),
                               config.TG_API_ID, config.TG_API_HASH) as c:
+        chan = await _resolve(c, chan)
         async for m in c.iter_messages(chan, offset_date=None):
             if m.date < since:
                 break
