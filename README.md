@@ -27,6 +27,14 @@ Don't paste your private channel's open invite link anywhere public – use a jo
 `python -m src.import_csv export.csv --tz UTC --until 2026-11-02` loads every signal that **entered and finished** (open trades and never-entered signals are skipped) into `data/trades.json`, so weekly / monthly / yearly reports have history from day one.
 Use `--until` to stop where the live Telegram pipeline starts (different ids, so overlap would double count). Build a report from saved history only: `python main.py --no-fetch --period weekly --date 2026-11-01`.
 
+## Running it on your own server (cron) – recommended
+`./scripts/install_cron.sh` installs (and later replaces) this schedule in your crontab:
+- every 5 min: `run_signals.sh` – the 2 random free-sample signals a day (instant, no GitHub Actions minutes needed)
+- hourly: `gate_outlook.sh` – BTC bounce-vs-dump chart once a day at 10:xx (your `TIMEZONE`)
+- hourly: `gate_reports.sh` – daily report after midnight, plus weekly (after Sunday), monthly (month end) and yearly (year end); catches up within 3h
+Logs are in `logs/*.log`. Add `--no-reports` to leave out the results reports. The installer also creates `RANDOM_SECRET` in `.env` if missing.
+Results reports refuse to post while `MARGIN_PER_TRADE_PCT=100` (raw ROI) unless `ALLOW_RAW_ROI=1`: set it to the % of your account each trade uses (e.g. `2`) so the headline is an **account return**.
+
 ## Several channels
 `PUBLIC_CHANNEL=@public1,@public2,-1001234567890` – every listed channel gets the same posts (a private/invite-only channel has no @username: use its numeric `-100…` id; the bot must be an admin with *Post Messages* in each). Delivery is **per channel**: if one fails, the others still get the post and only the failed one is retried next run (state in `data/posted_reports.json` / `data/public_signals.json`). Discord/X are posted once. `python -m src.check_bot` tests every channel without posting.
 

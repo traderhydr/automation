@@ -217,6 +217,10 @@ def main():
         publish.preview_to_me(paths, cap["telegram"])
     if a.demo or config.DRY_RUN:
         print("\n[DRY RUN] nothing posted."); return
+    if config.MARGIN_PER_TRADE_PCT >= 100 and os.getenv("ALLOW_RAW_ROI") != "1":
+        print("⛔ Not posting: results are set to ACCOUNT RETURN, but MARGIN_PER_TRADE_PCT is still 100 (raw per-trade ROI).\n"
+              "   Set MARGIN_PER_TRADE_PCT in .env to the % of your account each trade uses (e.g. 2), or ALLOW_RAW_ROI=1 to override.")
+        return
     from src import publish
     first_attempt = not any(k.startswith(rkey + "|") for k in done) and rkey not in done
     ok = publish.telegram_post(paths, cap["telegram"], todo)
