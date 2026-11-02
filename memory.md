@@ -145,3 +145,5 @@ Unit tests: `python -m unittest discover tests` (8 tests, real Cornix post wordi
 - 2026-11-02: user now HAS Telegram API ID + hash (not shared in chat, correctly). Next: make_session -> TG_SESSION_STRING, `src/list_channels.py` (added) to find PRIVATE_CHANNEL id, then add 4 GitHub secrets, then first real DRY_RUN.
 
 - Private channel title = 'zoro gem trades' -> PRIVATE_CHANNEL=zoro gem trades (fetch.py now resolves by title; falls back to 'contains'; errors if ambiguous). Untested against real Telegram.
+
+- 2026-11-02: user runs on Debian server (venv at ~/automation/.venv). First run failed 'Incorrect padding' = session string corrupted by copy/paste. make_session now writes TG_SESSION_STRING directly into .env (chmod 600). User given equivalent heredoc to run on the server.
