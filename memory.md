@@ -159,3 +159,5 @@ Unit tests: `python -m unittest discover tests` (8 tests, real Cornix post wordi
 - KNOWN MINOR: trade `side` is a best-effort guess (symbol->side from signals in fetch window) and can be wrong when a coin has LONG and SHORT signals in the same window (JUP loss labelled SHORT though it was the LONG). Side is not used in any public output.
 - STRUCTURAL FACT for honesty: 25x leverage => ~4% adverse move = 100% of margin; signal SLs are ~5% away => every stop-out costs >100% margin (-110% typical). Avg win +14%, avg loss -94% => needs ~87% win rate to break even.
 - New caption template preview reached user's Saved Messages OK. Win-rate rounding now half-up.
+
+- 2026-11-02: user HAS bot token + channel id (not shared in chat). Added `python -m src.check_bot` (verifies bot, channel, admin + post right; posts nothing; mock-tested). PUBLIC_CHANNEL may be @username or numeric -100... id. Next: user adds TG_BOT_TOKEN/PUBLIC_CHANNEL to .env, runs check_bot, then first controlled live post only after headline decision (raw ROI vs account return).
