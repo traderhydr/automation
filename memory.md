@@ -141,3 +141,5 @@ Unit tests: `python -m unittest discover tests` (8 tests, real Cornix post wordi
 - Teaser<->trade matching is best-effort (coin + time, <=14 days) because Cornix close posts carry no signal id.
 - Mistake fixed: .gitignore was accidentally emptied; restored. Generated images/caches untracked (history still has demo images + 3 aggregate charts from the real CSV).
 - Legal/ToS: finance & crypto promotion rules, X/Meta ad policies; every post carries risk disclaimer; referral links carry disclosure.
+
+- 2026-11-02: user now HAS Telegram API ID + hash (not shared in chat, correctly). Next: make_session -> TG_SESSION_STRING, `src/list_channels.py` (added) to find PRIVATE_CHANNEL id, then add 4 GitHub secrets, then first real DRY_RUN.

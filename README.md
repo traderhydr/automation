@@ -7,6 +7,7 @@ fetch.py (Telethon)  →  parse.py (regex + Claude fallback)  →  stats.py  →
 ```
 
 ## Setup
+(Quick path for Telegram access: `.env` with `TG_API_ID`/`TG_API_HASH` → `python -m src.make_session` (login once) → `python -m src.list_channels` to find the private channel id → put all four values in GitHub secrets.)
 1. `pip install -r requirements.txt`, copy `.env.example` → `.env`.
 2. Get `TG_API_ID` / `TG_API_HASH` at https://my.telegram.org, then run `python -m src.make_session` once and paste the string into `TG_SESSION_STRING`. (Your own account must be a member of the private channel.)
 3. Create a bot with @BotFather, add it as **admin** of your public channel, set `TG_BOT_TOKEN` and `PUBLIC_CHANNEL`.
