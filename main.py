@@ -42,7 +42,7 @@ def demo_signal_data():
     return msgs, cs
 
 
-def _post_signal(sig, status_candles_src, iv, status, delay_min, a):
+def _post_signal(sig, status_candles_src, iv, status, delay_min, a, chats=None, extras=True):
     from src import signals, signal_chart, publish
     candles, src = status_candles_src
     path = f"out/signal_{sig['id']}.png"
@@ -52,12 +52,14 @@ def _post_signal(sig, status_candles_src, iv, status, delay_min, a):
     if a.preview and not a.demo:
         publish.preview_to_me([path], cap)
     if a.demo or config.DRY_RUN:
-        print("[DRY RUN] nothing posted.\n"); return False
+        print("[DRY RUN] nothing posted.\n"); return []
     rr = signals.risk_reward(sig)["final_rr"]
-    publish.telegram_photo(path, cap, config.CHANNELS_SIGNALS)
+    ok = publish.telegram_photo(path, cap, chats or config.CHANNELS_SIGNALS)
+    if not extras:
+        return ok
     publish.discord_post([path], f"{sig['base']} {sig['side']} | R:R 1:{rr} (free sample)\n{tags}")
     publish.x_post([path], f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | free sample from our premium channel. Entry, TPs & SL on chart 👇" if not delay_min else f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | shared {delay_min} min after premium members. Details on chart 👇", " ".join(tags.split()[:3]))
-    return True
+    return ok
 
 
 def run_signals(a):
@@ -98,9 +100,13 @@ def run_signals(a):
         candles = signals.normalize_candles(candles, sig["entries"][0])
         if candles is None:
             print(f"Skipping {sig['symbol']}: exchange prices don't match the signal's price scale."); v["posted"] = True; continue
-        if _post_signal(sig, (candles, src), iv, ps.trade_status(sig, candles, ref), delay, a):
-            v["posted"] = True
-            ps.log_teaser(sig)
+        done_chats = v.setdefault("done_chats", [])
+        todo = [c for c in config.CHANNELS_SIGNALS if c not in done_chats]
+        ok = _post_signal(sig, (candles, src), iv, ps.trade_status(sig, candles, ref), delay, a, todo, extras=not done_chats)
+        if ok:
+            done_chats.extend(ok); ps.log_teaser(sig)
+            if all(c in done_chats for c in config.CHANNELS_SIGNALS):
+                v["posted"] = True
     if not config.DRY_RUN:
         ps.save(state)
 
@@ -188,8 +194,15 @@ def main():
     rkey = f"{a.period}:{start:%Y-%m-%d}"
     rpath = "data/posted_reports.json"
     done = set(json.load(open(rpath))) if os.path.exists(rpath) else set()
-    if rkey in done and not a.force and not a.demo and not config.DRY_RUN:
-        print(f"{rkey} was already posted – skipping (use --force to repost)."); return
+    live = not a.demo and not config.DRY_RUN
+    if a.force or not live:
+        todo = list(config.CHANNELS_REPORTS)
+    elif rkey in done:                                   # legacy marker: whole report already posted
+        todo = []
+    else:
+        todo = [c for c in config.CHANNELS_REPORTS if f"{rkey}|{c}" not in done]
+    if live and not todo:
+        print(f"{rkey} was already posted to every channel – skipping (use --force to repost)."); return
     today["teaser"]["open"] = ps.open_teasers(teasers, local, start, end)
     print(f"{a.period} report {label} ({start:%Y-%m-%d %H:%M} -> {end:%Y-%m-%d %H:%M} {config.TIMEZONE}): {today['trades']} trades")
     if today["trades"] == 0:
@@ -205,11 +218,15 @@ def main():
     if a.demo or config.DRY_RUN:
         print("\n[DRY RUN] nothing posted."); return
     from src import publish
-    publish.telegram_post(paths, cap["telegram"], config.CHANNELS_REPORTS)
-    publish.discord_post(paths, cap["short"] + "\n" + cap["tags"])
-    publish.x_post(paths, cap["short"], cap["x_tags"])
-    done.add(rkey); os.makedirs("data", exist_ok=True); json.dump(sorted(done), open(rpath, "w"))
-    print("Posted.")
+    first_attempt = not any(k.startswith(rkey + "|") for k in done) and rkey not in done
+    ok = publish.telegram_post(paths, cap["telegram"], todo)
+    if first_attempt or a.force:                         # Discord / X only once per report, even if a retry is needed
+        publish.discord_post(paths, cap["short"] + "\n" + cap["tags"])
+        publish.x_post(paths, cap["short"], cap["x_tags"])
+    done.update(f"{rkey}|{c}" for c in ok)
+    os.makedirs("data", exist_ok=True); json.dump(sorted(done), open(rpath, "w"))
+    failed = [c for c in todo if c not in ok]
+    print(f"Posted to {len(ok)} channel(s)." + (f" FAILED: {failed} – will retry only those on the next run." if failed else ""))
 
 
 if __name__ == "__main__":

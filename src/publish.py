@@ -15,23 +15,37 @@ def _tg(method, **kw):
     return r
 
 
+def _each(chats, send):
+    """Run send(chat) for every chat; one failing channel never blocks the others. Returns the chats that succeeded."""
+    ok = []
+    for chat in chats:
+        try:
+            send(chat); ok.append(chat)
+        except Exception as e:
+            print(f"⚠️  Could not post to {chat}: {e}")
+    return ok
+
+
 def telegram_photo(path, caption, chats=None):
-    """Photo + caption to every chat in `chats`. Telegram caps photo captions at 1024 chars; a longer text is sent as a
-    message right after the photo (never truncated, so links and disclaimers always survive)."""
+    """Photo + caption to each chat. Telegram caps photo captions at 1024 chars; a longer text is sent as a message
+    right after the photo (never truncated, so links and disclaimers always survive). Returns the chats that worked."""
     caption = caption + MARK
     short = caption if len(caption) <= 1024 else caption.split("\n\n")[0][:1000] + MARK
-    for chat in (chats or config.PUBLIC_CHANNELS):
+
+    def send(chat):
         with open(path, "rb") as f:
             _tg("sendPhoto", data={"chat_id": chat, "caption": short, "parse_mode": "HTML"}, files={"photo": f})
         if short is not caption:
             _tg("sendMessage", data={"chat_id": chat, "text": caption[:4096], "parse_mode": "HTML",
                                      "disable_web_page_preview": True})
+    return _each(chats or config.PUBLIC_CHANNELS, send)
 
 
 def telegram_post(paths, caption, chats=None):
-    """Album of images, then the full text, to every chat in `chats`."""
+    """Album of images, then the full text, to each chat. Returns the chats that worked."""
     import json
-    for chat in (chats or config.PUBLIC_CHANNELS):
+
+    def send(chat):
         if len(paths) == 1:
             with open(paths[0], "rb") as f:
                 _tg("sendPhoto", data={"chat_id": chat, "caption": MARK}, files={"photo": f})
@@ -44,6 +58,7 @@ def telegram_post(paths, caption, chats=None):
             _tg("sendMediaGroup", data={"chat_id": chat, "media": json.dumps(media)}, files=files)
         _tg("sendMessage", data={"chat_id": chat, "text": caption + MARK, "parse_mode": "HTML",
                                  "disable_web_page_preview": True})
+    return _each(chats or config.PUBLIC_CHANNELS, send)
 
 
 def discord_post(paths, text):
