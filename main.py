@@ -87,10 +87,10 @@ def run_signals(a):
         for s in sigs:
             sd["assigned"].setdefault(f"all-{s['id']}", {"sig": s, "posted": False})
     else:
-        ps.assign(sd, sigs, now)
+        ps.assign(sd, sigs, now, config.PUBLIC_SIGNAL_MAX_AGE_MIN)
     print(f"{day} slots: {sd['slots']} | assigned: {[v['sig']['symbol'] + ('' if not v['posted'] else '✓') for v in sd['assigned'].values()]}")
     changed = True
-    for slot, v in ps.due_to_post(sd, now, delay):
+    for slot, v in ps.due_to_post(sd, now, delay, lapse_min=config.PUBLIC_SIGNAL_MAX_AGE_MIN):
         sig = signals.find_fill(v["sig"], msgs)
         ref = datetime.fromisoformat(sig.get("fill", {}).get("date", sig["date"])).timestamp() * 1000
         try:

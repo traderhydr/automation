@@ -83,3 +83,18 @@ class OwnPosts(unittest.TestCase):
         from src.publish import MARK
         own = "⚡ #ORDI LONG · 25X\nR:R 1:1.1 · risk 5.12% price move" + MARK
         self.assertEqual(parse_trades(msgs(own)), [])
+
+
+class FreeSampleFreshness(unittest.TestCase):
+    def test_stale_signal_is_never_assigned(self):
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+        from src import public_signals as ps
+        tz = ZoneInfo("Asia/Karachi"); now = datetime(2026, 11, 3, 20, 0, tzinfo=tz)
+        sd = {"slots": [datetime(2026, 11, 3, 11, 0, tzinfo=tz).isoformat()], "assigned": {}}
+        old = {"id": 1, "symbol": "AAAUSDT", "date": (now - timedelta(hours=3)).isoformat()}
+        new = {"id": 2, "symbol": "BBBUSDT", "date": (now - timedelta(minutes=4)).isoformat()}
+        ps.assign(sd, [old], now, max_age_min=30)
+        self.assertEqual(sd["assigned"], {})                      # 3h-old signal ignored
+        ps.assign(sd, [old, new], now, max_age_min=30)
+        self.assertEqual([v["sig"]["id"] for v in sd["assigned"].values()], [2])

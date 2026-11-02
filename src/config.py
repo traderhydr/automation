@@ -54,3 +54,4 @@ PUBLIC_WINDOW_END = int(env("PUBLIC_WINDOW_END", "22") or 22)           # local 
 PREMIUM_LINK = env("PREMIUM_LINK", "https://t.me/Hydrzoro")
 PREMIUM_HANDLE = env("PREMIUM_HANDLE", "@Hydrzoro")      # people DM this handle to join premium                                       # where to subscribe / contact for premium
 RANDOM_SECRET = env("RANDOM_SECRET", "change-me")                        # keeps the daily random times unpredictable
+PUBLIC_SIGNAL_MAX_AGE_MIN = int(env("PUBLIC_SIGNAL_MAX_AGE_MIN", "30") or 30)   # never post a free sample older than this

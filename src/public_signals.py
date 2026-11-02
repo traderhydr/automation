@@ -31,13 +31,14 @@ def plan_slots(day, n, start_h, end_h, secret, tz, min_gap_min=90):
     return [datetime.combine(day, time(m // 60, m % 60), tzinfo=tz).isoformat() for m in mins]
 
 
-def assign(state_day, signals, now):
+def assign(state_day, signals, now, max_age_min=None):
     """Give each due, empty slot the first not-yet-used signal published at/after the slot time."""
     used = {v["sig"]["id"] for v in state_day["assigned"].values()}
     for slot in state_day["slots"]:
         if slot in state_day["assigned"] or datetime.fromisoformat(slot) > now:
             continue
-        cands = sorted((s for s in signals if s["id"] not in used and datetime.fromisoformat(s["date"]) >= datetime.fromisoformat(slot)),
+        fresh = (lambda s: max_age_min is None or (now - datetime.fromisoformat(s["date"])) <= timedelta(minutes=max_age_min))
+        cands = sorted((s for s in signals if s["id"] not in used and fresh(s) and datetime.fromisoformat(s["date"]) >= datetime.fromisoformat(slot)),
                        key=lambda s: s["date"])
         if cands:
             state_day["assigned"][slot] = {"sig": cands[0], "posted": False}
