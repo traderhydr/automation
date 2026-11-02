@@ -32,7 +32,7 @@ def compute(trades, bucket="day"):
         by_symbol[t["symbol"]] += t["pnl_pct"]
     return {
         "trades": n, "wins": len(wins), "losses": len(losses),
-        "win_rate": round(100 * len(wins) / n, 1) if n else 0.0,
+        "win_rate": round(100 * len(wins) / n + 1e-9, 1) if n else 0.0,   # +1e-9: 81.25 -> 81.3 (round half up)
         "total_pct": round(sum(pnls), 2),
         "avg_win": round(sum(wins) / len(wins), 2) if wins else 0.0,
         "avg_loss": round(sum(losses) / len(losses), 2) if losses else 0.0,
