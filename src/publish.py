@@ -75,3 +75,18 @@ def _x_links_reply(client, first):
     txt = links.plain_block()
     if txt:
         client.create_tweet(text=txt[:280], in_reply_to_tweet_id=first.data["id"])
+
+
+def preview_to_me(paths, text):
+    """Send images + caption to YOUR OWN Telegram 'Saved Messages' using the logged-in user session (no bot needed).
+    Lets you look at charts on your phone before anything is posted publicly."""
+    import asyncio
+    from telethon import TelegramClient
+    from telethon.sessions import StringSession
+
+    async def go():
+        async with TelegramClient(StringSession(config.TG_SESSION_STRING), config.TG_API_ID, config.TG_API_HASH) as c:
+            await c.send_file("me", paths[:10], force_document=False)
+            await c.send_message("me", text[:4096], parse_mode="html", link_preview=False)
+    asyncio.run(go())
+    print("Preview sent to your Telegram Saved Messages.")

@@ -147,3 +147,5 @@ Unit tests: `python -m unittest discover tests` (8 tests, real Cornix post wordi
 - Private channel title = 'zoro gem trades' -> PRIVATE_CHANNEL=zoro gem trades (fetch.py now resolves by title; falls back to 'contains'; errors if ambiguous). Untested against real Telegram.
 
 - 2026-11-02: user runs on Debian server (venv at ~/automation/.venv). First run failed 'Incorrect padding' = session string corrupted by copy/paste. make_session now writes TG_SESSION_STRING directly into .env (chmod 600). User given equivalent heredoc to run on the server.
+
+- 2026-11-02 (user's server): FIRST REAL RUN WORKED. Session saved, channel resolved by title, 48 closed trades parsed for 2 Nov: 39 wins/9 losses, total -286.39% (30-day ctx -721%, 55.6% win rate) => the channel's real numbers are much weaker than the CSV's (+15,518% over 4 days) and the CSV has ~340 trades/day vs 48 in channel => CSV (chat 'Botbac') is a DIFFERENT/bigger stream. MUST ask which stream is the public record. Added `--preview` (sends result to user's Saved Messages) and `python -m src.breakdown [date]` (worst/best trades, by-day). User had several stray Telegram sessions; told to keep newest only.

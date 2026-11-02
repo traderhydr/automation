@@ -49,6 +49,8 @@ def _post_signal(sig, status_candles_src, iv, status, delay_min, a):
     signal_chart.signal_chart(sig, candles, iv, src, path)
     cap, tags = signals.signal_caption(sig, status, delay_min, config.PREMIUM_LINK)
     print(cap, "\nImage:", path)
+    if a.preview and not a.demo:
+        publish.preview_to_me([path], cap)
     if a.demo or config.DRY_RUN:
         print("[DRY RUN] nothing posted.\n"); return False
     rr = signals.risk_reward(sig)["final_rr"]
@@ -121,6 +123,9 @@ def run_scenario(a):
         scenario_chart.scenario_chart(base, cs, lv, iv, src, path)
         cap, tags = scenario.scenario_caption(base, lv, fmt)
         print(cap, "\nImage:", path)
+        if a.preview and not a.demo:
+            from src import publish as _p
+            _p.preview_to_me([path], cap)
         if a.demo or config.DRY_RUN:
             print("[DRY RUN] nothing posted.\n"); continue
         from src import publish
@@ -132,6 +137,7 @@ def run_scenario(a):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true")
+    ap.add_argument("--preview", action="store_true", help="send the result to YOUR Telegram Saved Messages (nothing public)")
     ap.add_argument("--no-fetch", action="store_true", help="build the report from saved history only (no Telegram)")
     ap.add_argument("--scenario", metavar="SYMBOLS", help="market outlook chart(s), e.g. BTCUSDT,ETHUSDT")
     ap.add_argument("--signals", action="store_true", help="post charts for NEW signals instead of a report")
@@ -193,6 +199,9 @@ def main():
     cap = caption.make_captions(today, month, a.period, label)
     print(cap["telegram"]); print("\nImages:", paths)
 
+    if a.preview:
+        from src import publish
+        publish.preview_to_me(paths, cap["telegram"])
     if a.demo or config.DRY_RUN:
         print("\n[DRY RUN] nothing posted."); return
     from src import publish
