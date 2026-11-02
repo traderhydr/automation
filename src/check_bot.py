@@ -11,29 +11,30 @@ def call(method, **params):
 def main():
     if not config.TG_BOT_TOKEN:
         raise SystemExit("TG_BOT_TOKEN is empty in .env")
-    if not config.PUBLIC_CHANNEL:
-        raise SystemExit("PUBLIC_CHANNEL is empty in .env (use @username or the numeric id like -100123...)")
+    chans = config.ALL_POST_CHANNELS
+    if not chans:
+        raise SystemExit("PUBLIC_CHANNEL is empty in .env (comma separate several: @a,-1001234567890)")
     me = call("getMe")
     if not me.get("ok"):
         raise SystemExit(f"Bot token rejected by Telegram: {me.get('description')}")
     bot = me["result"]
     print(f"✅ Bot OK: @{bot['username']} ({bot['first_name']})")
-    chat = call("getChat", chat_id=config.PUBLIC_CHANNEL)
-    if not chat.get("ok"):
-        raise SystemExit(f"❌ Can't see channel '{config.PUBLIC_CHANNEL}': {chat.get('description')}\n"
-                         "   -> add the bot as an ADMIN of the channel, and check the id/@username.")
-    c = chat["result"]
-    print(f"✅ Channel found: {c.get('title')} (type: {c.get('type')}, id: {c.get('id')})")
-    mem = call("getChatMember", chat_id=config.PUBLIC_CHANNEL, user_id=bot["id"])
-    if not mem.get("ok"):
-        raise SystemExit(f"❌ Can't read the bot's role: {mem.get('description')}")
-    m = mem["result"]
-    if m["status"] not in ("administrator", "creator"):
-        raise SystemExit(f"❌ Bot is '{m['status']}', not admin. Make it an administrator with 'Post messages' permission.")
-    can_post = m.get("can_post_messages", True)
-    print(f"{'✅' if can_post else '❌'} Bot is admin; can post messages: {can_post}")
-    if not can_post:
-        raise SystemExit("   -> enable 'Post Messages' for the bot in the channel's admin settings.")
+    bad = 0
+    for ch in chans:
+        chat = call("getChat", chat_id=ch)
+        if not chat.get("ok"):
+            print(f"❌ {ch}: can't see it ({chat.get('description')}) -> add the bot as ADMIN and check the id"); bad += 1; continue
+        c = chat["result"]
+        mem = call("getChatMember", chat_id=ch, user_id=bot["id"])
+        m = mem.get("result", {}) if mem.get("ok") else {}
+        ok = m.get("status") in ("administrator", "creator") and m.get("can_post_messages", True)
+        print(f"{'✅' if ok else '❌'} {c.get('title')} ({c.get('type')}, id {c.get('id')}): bot is {m.get('status', 'unknown')}"
+              + ("" if ok else " -> make it admin with 'Post Messages'"))
+        bad += 0 if ok else 1
+    routing = {"Reports": config.CHANNELS_REPORTS, "Free signals": config.CHANNELS_SIGNALS, "BTC outlook": config.CHANNELS_OUTLOOK}
+    print("\nRouting:", "; ".join(f"{k} -> {', '.join(v)}" for k, v in routing.items()))
+    if bad:
+        raise SystemExit(f"\n{bad} channel(s) need fixing. Nothing was posted.")
     print("\nAll good. Nothing was posted. (Posting stays off while DRY_RUN=1.)")
 
 

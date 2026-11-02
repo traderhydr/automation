@@ -75,6 +75,9 @@ jobs:
           COPY_TRADING_LINK: ${{ vars.COPY_TRADING_LINK }}
           BINANCE_CREATOR_LINK: ${{ vars.BINANCE_CREATOR_LINK }}
           PREMIUM_LINK: ${{ vars.PREMIUM_LINK }}
+          CHANNELS_REPORTS: ${{ vars.CHANNELS_REPORTS }}
+          CHANNELS_SIGNALS: ${{ vars.CHANNELS_SIGNALS }}
+          CHANNELS_OUTLOOK: ${{ vars.CHANNELS_OUTLOOK }}
           DRY_RUN: ${{ vars.DRY_RUN || '1' }}
       - name: Save trade history
         if: steps.gate.outputs.jobs != ''

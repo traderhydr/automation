@@ -11,7 +11,15 @@ TG_API_HASH = env("TG_API_HASH")
 TG_SESSION_STRING = env("TG_SESSION_STRING")
 PRIVATE_CHANNEL = env("PRIVATE_CHANNEL")
 TG_BOT_TOKEN = env("TG_BOT_TOKEN")
-PUBLIC_CHANNEL = env("PUBLIC_CHANNEL")
+PUBLIC_CHANNEL = env("PUBLIC_CHANNEL")          # one OR several, comma separated: @a,-1001234567890
+def _chans(v):
+    return [x.strip() for x in v.split(",") if x.strip()]
+PUBLIC_CHANNELS = _chans(PUBLIC_CHANNEL)
+# Optional routing: which channels get which kind of post (default = all PUBLIC_CHANNEL entries)
+CHANNELS_REPORTS = _chans(env("CHANNELS_REPORTS")) or PUBLIC_CHANNELS   # daily/weekly/monthly/yearly results
+CHANNELS_SIGNALS = _chans(env("CHANNELS_SIGNALS")) or PUBLIC_CHANNELS   # the free sample signals
+CHANNELS_OUTLOOK = _chans(env("CHANNELS_OUTLOOK")) or PUBLIC_CHANNELS   # BTC bounce-vs-dump charts
+ALL_POST_CHANNELS = list(dict.fromkeys(CHANNELS_REPORTS + CHANNELS_SIGNALS + CHANNELS_OUTLOOK))
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
 CLAUDE_MODEL = env("CLAUDE_MODEL", "claude-sonnet-5-5")
 DISCORD_WEBHOOK_URL = env("DISCORD_WEBHOOK_URL")

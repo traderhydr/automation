@@ -76,3 +76,10 @@ class CaptionTemplate(unittest.TestCase):
                      "3-Day Win Rate: 55.6%", "3-Day Cumulative: -721.4%", "OFFICIAL ECOSYSTEM & LINKS", "Media & Socials", "stop-losses included"):
             self.assertIn(must, t)
         self.assertNotIn("30-Day", t)       # only 3 days of history -> must not claim 30 days
+
+
+class OwnPosts(unittest.TestCase):
+    def test_bot_posts_are_never_parsed_as_trades(self):
+        from src.publish import MARK
+        own = "⚡ #ORDI LONG · 25X\nR:R 1:1.1 · risk 5.12% price move" + MARK
+        self.assertEqual(parse_trades(msgs(own)), [])

@@ -2,36 +2,48 @@ import requests
 from . import config
 
 
-def telegram_photo(path, caption):
-    """Photo + caption. Telegram caps photo captions at 1024 chars; a longer text is sent as a message right after
-    the photo (never truncated, so links and disclaimers always survive)."""
-    base = f"https://api.telegram.org/bot{config.TG_BOT_TOKEN}"
-    short = caption if len(caption) <= 1024 else caption.split("\n\n")[0][:1000]
-    with open(path, "rb") as f:
-        requests.post(f"{base}/sendPhoto", data={"chat_id": config.PUBLIC_CHANNEL, "caption": short,
-                      "parse_mode": "HTML"}, files={"photo": f}).raise_for_status()
-    if short is not caption:
-        requests.post(f"{base}/sendMessage", data={"chat_id": config.PUBLIC_CHANNEL, "text": caption[:4096], "parse_mode": "HTML",
-                      "disable_web_page_preview": True}).raise_for_status()
+MARK = "\u2063\u2063\u2063"      # invisible separators: every bot post carries it, the reader skips such messages
 
 
-def telegram_post(paths, caption):
-    base = f"https://api.telegram.org/bot{config.TG_BOT_TOKEN}"
-    # Telegram caption limit is 1024 chars: send the album, then the full text.
-    if len(paths) == 1:
-        with open(paths[0], "rb") as f:
-            requests.post(f"{base}/sendPhoto", data={"chat_id": config.PUBLIC_CHANNEL},
-                          files={"photo": f}).raise_for_status()
-    else:
-        import json
-        media, files = [], {}
-        for i, p in enumerate(paths[:10]):
-            files[f"f{i}"] = open(p, "rb")
-            media.append({"type": "photo", "media": f"attach://f{i}"})
-        requests.post(f"{base}/sendMediaGroup", data={"chat_id": config.PUBLIC_CHANNEL,
-                      "media": json.dumps(media)}, files=files).raise_for_status()
-    requests.post(f"{base}/sendMessage", data={"chat_id": config.PUBLIC_CHANNEL, "text": caption,
-                  "parse_mode": "HTML", "disable_web_page_preview": True}).raise_for_status()
+def is_own_post(text):
+    return MARK in (text or "")
+
+
+def _tg(method, **kw):
+    r = requests.post(f"https://api.telegram.org/bot{config.TG_BOT_TOKEN}/{method}", **kw)
+    r.raise_for_status()
+    return r
+
+
+def telegram_photo(path, caption, chats=None):
+    """Photo + caption to every chat in `chats`. Telegram caps photo captions at 1024 chars; a longer text is sent as a
+    message right after the photo (never truncated, so links and disclaimers always survive)."""
+    caption = caption + MARK
+    short = caption if len(caption) <= 1024 else caption.split("\n\n")[0][:1000] + MARK
+    for chat in (chats or config.PUBLIC_CHANNELS):
+        with open(path, "rb") as f:
+            _tg("sendPhoto", data={"chat_id": chat, "caption": short, "parse_mode": "HTML"}, files={"photo": f})
+        if short is not caption:
+            _tg("sendMessage", data={"chat_id": chat, "text": caption[:4096], "parse_mode": "HTML",
+                                     "disable_web_page_preview": True})
+
+
+def telegram_post(paths, caption, chats=None):
+    """Album of images, then the full text, to every chat in `chats`."""
+    import json
+    for chat in (chats or config.PUBLIC_CHANNELS):
+        if len(paths) == 1:
+            with open(paths[0], "rb") as f:
+                _tg("sendPhoto", data={"chat_id": chat, "caption": MARK}, files={"photo": f})
+        else:
+            media, files = [], {}
+            for i, p_ in enumerate(paths[:10]):
+                files[f"f{i}"] = open(p_, "rb")
+                media.append({"type": "photo", "media": f"attach://f{i}"})
+            media[0]["caption"] = MARK
+            _tg("sendMediaGroup", data={"chat_id": chat, "media": json.dumps(media)}, files=files)
+        _tg("sendMessage", data={"chat_id": chat, "text": caption + MARK, "parse_mode": "HTML",
+                                 "disable_web_page_preview": True})
 
 
 def discord_post(paths, text):

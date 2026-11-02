@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 from . import config
+from .publish import is_own_post
 
 
 async def _resolve(client, ref):
@@ -39,7 +40,7 @@ async def _fetch(hours):
         async for m in c.iter_messages(chan, offset_date=None):
             if m.date < since:
                 break
-            if m.message:
+            if m.message and not is_own_post(m.message):
                 out.append({"id": m.id, "date": m.date.isoformat(), "text": m.message})
     return list(reversed(out))
 

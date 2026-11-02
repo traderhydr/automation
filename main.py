@@ -54,7 +54,7 @@ def _post_signal(sig, status_candles_src, iv, status, delay_min, a):
     if a.demo or config.DRY_RUN:
         print("[DRY RUN] nothing posted.\n"); return False
     rr = signals.risk_reward(sig)["final_rr"]
-    publish.telegram_photo(path, cap)
+    publish.telegram_photo(path, cap, config.CHANNELS_SIGNALS)
     publish.discord_post([path], f"{sig['base']} {sig['side']} | R:R 1:{rr} (free sample)\n{tags}")
     publish.x_post([path], f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | free sample from our premium channel. Entry, TPs & SL on chart 👇" if not delay_min else f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | shared {delay_min} min after premium members. Details on chart 👇", " ".join(tags.split()[:3]))
     return True
@@ -129,7 +129,7 @@ def run_scenario(a):
         if a.demo or config.DRY_RUN:
             print("[DRY RUN] nothing posted.\n"); continue
         from src import publish
-        publish.telegram_photo(path, cap)
+        publish.telegram_photo(path, cap, config.CHANNELS_OUTLOOK)
         publish.discord_post([path], f"{base} outlook\n{tags}")
         publish.x_post([path], f"📊 #{base} outlook: {fmt(lv['last'])} ({lv['chg24']:+.2f}% 24h). Support {fmt(lv['zone_mid'])} | Resistance {fmt(lv['resistance'])}. Bounce or dump? 👇", " ".join(tags.split()[:3]))
 
@@ -205,7 +205,7 @@ def main():
     if a.demo or config.DRY_RUN:
         print("\n[DRY RUN] nothing posted."); return
     from src import publish
-    publish.telegram_post(paths, cap["telegram"])
+    publish.telegram_post(paths, cap["telegram"], config.CHANNELS_REPORTS)
     publish.discord_post(paths, cap["short"] + "\n" + cap["tags"])
     publish.x_post(paths, cap["short"], cap["x_tags"])
     done.add(rkey); os.makedirs("data", exist_ok=True); json.dump(sorted(done), open(rpath, "w"))

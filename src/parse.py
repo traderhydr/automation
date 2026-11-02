@@ -72,6 +72,8 @@ def _claude_parse(msgs):
 
 
 def parse_trades(messages):
+    from .publish import is_own_post
+    messages = [m for m in messages if not is_own_post(m.get("text"))]   # never parse our own bot posts
     # 1) Cornix bot posts (primary source); 2) generic regex; 3) Claude for anything left
     trades, handled = parse_cornix(messages)
     leftovers = []
