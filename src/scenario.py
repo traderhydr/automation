@@ -71,15 +71,18 @@ def human(v):
 
 
 def scenario_caption(base, lv, fmt):
-    from . import links
+    from .caption import clean_post
     k1, k2 = key_level_text(base, lv, fmt)
     ch = lv["chg24"]; arrow = "🔴" if ch < 0 else "🟢"
-    tags = f"#{base} #{base}USDT #CryptoAnalysis #Bitcoin #TradingSetup" if base == "BTC" else f"#{base} #{base}USDT #CryptoAnalysis #TradingSetup"
-    return (f"📊 <b>#{base} OUTLOOK</b> · {fmt(lv['last'])} ({arrow} {ch:+.2f}% 24h)\n\n"
-            f"🛡 Support zone: {fmt(lv['zone'][0])} – {fmt(lv['zone'][1])}\n🚧 Resistance: {fmt(lv['resistance'])}\n"
-            f"🔻 Major support: {fmt(lv['major'])}\n\n"
+    tags = (f"#{base} #{base}USDT #CryptoAnalysis #Bitcoin #TradingSetup" if base == "BTC"
+            else f"#{base} #{base}USDT #CryptoAnalysis #TradingSetup")
+    levels = ("<b>🛡 KEY LEVELS</b>\n\n"
+              f"• Support zone: {fmt(lv['zone'][0])} – {fmt(lv['zone'][1])}\n• Resistance: {fmt(lv['resistance'])}\n"
+              f"• Major support: {fmt(lv['major'])}")
+    scen = ("<b>🎯 SCENARIOS</b>\n\n"
             f"🟢 <b>Bounce:</b> support holds → room toward {fmt(lv['resistance'])}\n"
-            f"🔴 <b>Dump:</b> support breaks → retest near {fmt(lv['major'])}\n\n"
-            f"💡 {k1} {k2}\n\n{tags}\n"
-            + (links.telegram_block() + "\n\n" if links.telegram_block() else "")
-            + "⚠️ Levels are algorithmic scenarios, not predictions or financial advice."), tags
+            f"🔴 <b>Dump:</b> support breaks → retest near {fmt(lv['major'])}")
+    note = f"💡 {k1} {k2}"
+    title = f"📊 #{base} OUTLOOK · {fmt(lv['last'])} ({arrow} {ch:+.2f}% 24h)"
+    return clean_post(title, [levels, scen, note], tags,
+                      "⚠️ Levels are algorithmic scenarios, not predictions or financial advice."), tags

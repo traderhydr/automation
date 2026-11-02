@@ -109,3 +109,14 @@ def make_captions(today, month, period="daily", label=""):
     c["tags"] = tags
     c["x_tags"] = " ".join(list(dict.fromkeys(c.get("hashtags") or BASE_TAGS))[:3])
     return c
+
+
+def clean_post(title, body_blocks, tags, closing_disclaimer):
+    """Same clean layout as the report template: title, ━━━ separators, blank lines, grouped links, disclosure."""
+    from . import links
+    parts = [f"<b>{title}</b>", SEP + "\n" + "\n\n".join(b for b in body_blocks if b) + "\n" + SEP]
+    eco = links.ecosystem_block()
+    if eco:
+        parts += [eco, SEP]
+    parts += [x for x in (tags, links.disclosure(), closing_disclaimer) if x]
+    return "\n\n".join(parts)

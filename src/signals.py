@@ -109,9 +109,9 @@ def fetch_candles(symbol, interval="15m", limit=96, end_ms=None):
 
 
 def signal_caption(sig, status=None, delay_min=None, premium_link=""):
-    rr = risk_reward(sig)
     from .signal_chart import fmt
-    from . import links
+    from .caption import clean_post
+    rr = risk_reward(sig)
     side_emoji = "🟢" if sig["side"] == "LONG" else "🔴"
     tps = " → ".join(fmt(t["price"]) for t in rr["tps"])
     ents = " / ".join(fmt(e) for e in sig["entries"])
@@ -122,17 +122,21 @@ def signal_caption(sig, status=None, delay_min=None, premium_link=""):
         stat = f"✅ TP{status[2:]} reached so far"
     elif status and "_then_stop" in status:
         stat = f"✅ TP{status[2:status.index('_')]} reached, then stopped"
-    delay = (f"🕒 <i>Shared {delay_min} min after entry – premium members got this live.</i>\n"
-             + (f"🔒 Get every signal in real time: DM {config.PREMIUM_HANDLE} to join premium\n" if premium_link else "")) if delay_min else \
-            ("🎁 <i>Free sample from our premium channel – you can take it live.</i>\n"
-             + (f"🔒 Premium members get every signal live – DM {config.PREMIUM_HANDLE} to join\n" if premium_link else ""))
-    body = (f"⚡ <b>#{sig['base']} {sig['side']}</b>{lev} {side_emoji}\n\n"
-            f"🎯 Entry: {ents}\n💰 TPs: {tps}\n🛑 SL: {fmt(sig['sl'])}\n\n"
-            f"⚖️ <b>R:R 1:{rr['final_rr']}</b> (to TP{len(rr['tps'])}) · risk {rr['risk_pct']}% price move\n"
-            + (f"📌 Status: <b>{stat}</b>\n" if stat else "") + "\n" + delay + f"\n{tags}\n"
-            + (links.telegram_block() + "\n\n" if links.telegram_block() else "")
-            + "⚠️ Not financial advice. Leveraged trading carries high risk. Not every trade wins.")
-    return body, tags
+    lines = [f"• Entry: {ents}", f"• Take Profits: {tps}", f"• Stop Loss: {fmt(sig['sl'])}",
+             f"• Risk : Reward: <b>1 : {rr['final_rr']}</b> (to TP{len(rr['tps'])}) · risk {rr['risk_pct']}% price move"]
+    if stat:
+        lines.append(f"• Status: <b>{stat}</b>")
+    if delay_min:
+        note = f"🕒 <i>Shared {delay_min} min after entry. Premium members got this live.</i>"
+        if premium_link:
+            note += f"\n🔒 Get every signal in real time: DM {config.PREMIUM_HANDLE} to join premium"
+    else:
+        note = "🎁 <i>Free sample from our premium channel. You can take it live.</i>"
+        if premium_link:
+            note += f"\n🔒 Premium members get every signal live: DM {config.PREMIUM_HANDLE} to join"
+    title = f"⚡ #{sig['base']} {sig['side']}{lev} {side_emoji}"
+    return clean_post(title, ["\n".join(lines), note], tags,
+                      "⚠️ Not financial advice. Leveraged trading carries high risk. Not every trade wins."), tags
 
 
 def normalize_candles(candles, ref_price):

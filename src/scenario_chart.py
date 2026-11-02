@@ -78,7 +78,7 @@ def scenario_chart(base, candles, lv, interval, source, path):
     from matplotlib.patches import Circle
     from matplotlib.patches import Ellipse
     fig.patches.append(Ellipse((0.047, 0.915), 0.056, 0.056 * 11.68 / 7.84, transform=fig.transFigure, fc="#f7931a", ec="none", figure=fig))
-    fig.text(0.047, 0.915, "B" if base != "BTC" else "₿", color="white", fontsize=22, weight="bold", ha="center", va="center")
+    fig.text(0.047, 0.915, base[0], color="white", fontsize=22, weight="bold", ha="center", va="center")
     fig.text(0.092, 0.935, f"{base}USDT", fontsize=26, weight="bold")
     fig.text(0.092, 0.885, f"{base} / TetherUS · {source.upper()} · {interval} chart", fontsize=11, color=MUTED)
     stats = [("LAST PRICE", fmt(last), FG), ("24H CHANGE", f"{lv['chg24']:+.2f}%", RED if lv["chg24"] < 0 else GREEN),
