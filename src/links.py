@@ -45,3 +45,34 @@ def plain_block():
     if not rows:
         return ""
     return "🔗 Links\n" + "\n".join(rows) + ("\n(Referral/affiliate links – I may earn a commission.)" if aff else "")
+
+
+def _row(emoji, label, url):
+    return f"{emoji} {label}: {html.escape(url, quote=False)}" if _clean(url) else ""
+
+
+def ecosystem_block():
+    """The user's 'OFFICIAL ECOSYSTEM & LINKS' layout (grouped, blank line between rows). Empty groups are skipped."""
+    prem = _row("•", "Join Premium", config.PREMIUM_LINK)
+    if prem:
+        prem = f"• Join Premium: DM {config.PREMIUM_HANDLE} → {html.escape(config.PREMIUM_LINK, quote=False)}"
+    groups = [
+        ("💎 VIP & Signals", [prem, _row("•", "Main Channel", config.TELEGRAM_LINK),
+                              "" if config.CONTACT_LINK == config.PREMIUM_LINK else _row("•", "Contact", config.CONTACT_LINK)]),
+        ("🤝 Execution & Copy Trading", [_row("•", "BloFin Copy Trading", config.COPY_TRADING_LINK),
+                                         _row("•", "Trade on BloFin (Fee Rebate)", config.BLOFIN_REF_LINK),
+                                         _row("•", "Binance Square", config.BINANCE_CREATOR_LINK)]),
+        ("📲 Media & Socials", [_row("💙", "X / Twitter", config.X_LINK), _row("▶️", "YouTube", config.YOUTUBE_LINK)]),
+    ]
+    parts = []
+    for title, rows in groups:
+        rows = [r for r in rows if r]
+        if rows:
+            parts.append(f"<b>{title}</b>\n\n" + "\n\n".join(rows))
+    return "<b>🌐 OFFICIAL ECOSYSTEM & LINKS</b>\n\n" + "\n\n".join(parts) if parts else ""
+
+
+def disclosure():
+    if any(_clean(u) for u in (config.BLOFIN_REF_LINK, config.BINANCE_CREATOR_LINK, config.COPY_TRADING_LINK)):
+        return "<i>Referral / affiliate links: I may earn a commission or rebate at no extra cost to you.</i>"
+    return ""

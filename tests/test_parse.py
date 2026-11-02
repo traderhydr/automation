@@ -63,3 +63,16 @@ class RealPosts(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CaptionTemplate(unittest.TestCase):
+    def test_daily_template_numbers_and_sections(self):
+        from src import caption
+        today = {"wins": 39, "losses": 9, "trades": 48, "win_rate": 81.3, "total_pct": -286.39, "best": 40.12, "worst": -111.41,
+                 "profit_factor": 0.4, "max_drawdown": 300.0, "teaser": {"closed": 0, "wins": 0, "losses": 0, "total": 0, "open": 0, "items": []}}
+        month = {"win_rate": 55.6, "total_pct": -721.4, "days": ["a", "b", "c"]}
+        t = caption.telegram_report(today, month, "daily", "02 NOV 2026")
+        for must in ("DAILY PERFORMANCE REPORT · 02 NOV 2026", "81.3% (39 / 48 trades in profit)", "-286.39%",
+                     "3-Day Win Rate: 55.6%", "3-Day Cumulative: -721.4%", "OFFICIAL ECOSYSTEM & LINKS", "Media & Socials", "stop-losses included"):
+            self.assertIn(must, t)
+        self.assertNotIn("30-Day", t)       # only 3 days of history -> must not claim 30 days

@@ -7,6 +7,46 @@ TRANSPARENCY = "Sum of all closed trades, losses included. Leveraged returns."
 DISCLAIMER = "⚠️ Past performance does not guarantee future results. Trading is risky – not financial advice."
 
 
+SEP = "━━━━━━━━━━━━━━━━━━━"
+PERIOD_WORD = {"daily": "DAILY", "weekly": "WEEKLY", "monthly": "MONTHLY", "yearly": "YEARLY"}
+
+
+def _intro(today):
+    if today["total_pct"] >= 0:
+        return "Real results, zero cherry-picking. Every closed trade is counted: wins and losses."
+    if today["win_rate"] >= 60:
+        return ("Real results, zero cherry-picking. Even on high-win days, managing drawdowns and "
+                "leverage discipline is part of the game.")
+    return "Real results, zero cherry-picking. Red days happen: risk management is the job."
+
+
+def telegram_report(today, month, period, label):
+    """Layout supplied by the channel owner (clean spacing). All numbers come from the real trade history."""
+    from . import links
+    pw, Pw = PERIOD_WORD[period], PERIOD_WORD[period].title()
+    net = "📈" if today["total_pct"] >= 0 else "📉"
+    rows = [f"• {Pw} Win Rate: {today['win_rate']}% ({today['wins']} / {today['trades']} trades in profit) ✅",
+            f"• {Pw} Net PnL: {today['total_pct']:+.2f}% {net}"]
+    if period == "daily":
+        n = max(1, min(30, len(month["days"])))      # honest label: days of history actually tracked (max 30)
+        rows += [f"• {n}-Day Win Rate: {month['win_rate']}% 📈", f"• {n}-Day Cumulative: {month['total_pct']:+.1f}%"]
+    else:
+        pf = today["profit_factor"] if today["profit_factor"] is not None else "n/a"
+        rows += [f"• Profit Factor: {pf}", f"• Best / Worst Trade: {today['best']:+.2f}% / {today['worst']:+.2f}%",
+                 f"• Max Drawdown: -{today['max_drawdown']}%"]
+    tz = today["teaser"]
+    if tz["closed"] or tz["open"]:
+        items = ", ".join(f"{s} {v:+.2f}%" + (" ✅" if v > 0 else " ❌") for s, v in tz["items"])
+        rows.append(f"• ⭐ Free Samples Shared: {items}" + (f" · {tz['open']} still open" if tz["open"] else ""))
+    note = f"(Figures reflect the sum of all closed trades, stop-losses included. {config.PNL_NOTE}.)"
+    parts = [f"<b>📊 {pw} PERFORMANCE REPORT · {label}</b>", SEP + "\n" + _intro(today),
+             "<b>⚡ THE BREAKDOWN</b>", "\n".join(rows), note + "\n" + SEP]
+    eco = links.ecosystem_block()
+    if eco:
+        parts += [eco, SEP]
+    return "\n\n".join(parts)
+
+
 PERIOD_LABEL = {"daily": "Today", "weekly": "This week", "monthly": "This month", "yearly": "This year"}
 
 
@@ -64,7 +104,8 @@ def make_captions(today, month, period="daily", label=""):
     tags = " ".join(dict.fromkeys(c.get("hashtags") or BASE_TAGS))
     from . import links
     c["links_tg"], c["links_plain"] = links.telegram_block(), links.plain_block()
-    c["telegram"] = f"{c['telegram']}\n\n{tags}\n\n" + (c["links_tg"] + "\n\n" if c["links_tg"] else "") + DISCLAIMER
+    # Telegram post = the owner's template (exact real numbers); Claude/fallback text is only used for X + hashtags
+    c["telegram"] = "\n\n".join(x for x in (telegram_report(today, month, period, label), tags, links.disclosure(), DISCLAIMER) if x)
     c["tags"] = tags
     c["x_tags"] = " ".join(list(dict.fromkeys(c.get("hashtags") or BASE_TAGS))[:3])
     return c
