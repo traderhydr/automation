@@ -76,6 +76,33 @@ def _post_signal(sig, status_candles_src, iv, status, delay_min, a, chats=None, 
     return ok
 
 
+def run_links(a):
+    """Standalone links post: LINKS_POST_DAYS of the month, from LINKS_POST_HOUR local time; once per channel per day."""
+    from src import links, publish
+    tz = ZoneInfo(config.TIMEZONE); now = datetime.now(tz)
+    due = now.day in config.LINKS_POST_DAYS and now.hour >= config.LINKS_POST_HOUR
+    if a.if_due and not due:
+        return
+    text = links.ecosystem_compact()
+    if not text:
+        print("No links configured."); return
+    print(text)
+    if a.preview:
+        publish.preview_to_me([config.LOGO_IMAGE] if os.path.exists(config.LOGO_IMAGE) else [], text)
+    if a.demo or config.DRY_RUN:
+        print("\n[DRY RUN] nothing posted."); return
+    rpath = "data/posted_reports.json"
+    done = set(json.load(open(rpath))) if os.path.exists(rpath) else set()
+    key = f"links:{now.date().isoformat()}"
+    todo = [c for c in config.CHANNELS_REPORTS if f"{key}|{c}" not in done] if not (a.force or not a.if_due) else list(config.CHANNELS_REPORTS)
+    if not todo:
+        print(f"{key} already posted to every channel."); return
+    ok = publish.telegram_text(text, todo)
+    done.update(f"{key}|{c}" for c in ok)
+    os.makedirs("data", exist_ok=True); json.dump(sorted(done), open(rpath, "w"))
+    print(f"Links post sent to {len(ok)} channel(s)." + (f" FAILED: {[c for c in todo if c not in ok]}" if len(ok) < len(todo) else ""))
+
+
 def run_signals(a):
     """FREE-channel samples: N random signals/day, posted immediately (or DELAY min later if PUBLIC_SIGNAL_DELAY_MIN > 0)."""
     from src import signals, public_signals as ps
@@ -167,6 +194,8 @@ def run_scenario(a):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true")
+    ap.add_argument("--links-post", action="store_true", help="post the OFFICIAL ECOSYSTEM & LINKS block (3x a month)")
+    ap.add_argument("--if-due", action="store_true", help="with --links-post: do nothing unless today is a links day and the hour has come")
     ap.add_argument("--only", help="with --scenario: comma list of destinations (telegram,discord,x), e.g. --only x to test X alone")
     ap.add_argument("--preview", action="store_true", help="send the result to YOUR Telegram Saved Messages (nothing public)")
     ap.add_argument("--no-fetch", action="store_true", help="build the report from saved history only (no Telegram)")
@@ -178,6 +207,8 @@ def main():
     ap.add_argument("--date", help="any date (YYYY-MM-DD) inside the period to report; default today (in TIMEZONE)")
     a = ap.parse_args()
     os.makedirs("out", exist_ok=True)
+    if a.links_post:
+        return run_links(a)
     if a.signals:
         return run_signals(a)
     if a.scenario:

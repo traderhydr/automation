@@ -76,3 +76,24 @@ def disclosure():
     if any(_clean(u) for u in (config.BLOFIN_REF_LINK, config.BINANCE_CREATOR_LINK, config.COPY_TRADING_LINK)):
         return "<i>Referral / affiliate links: I may earn a commission or rebate at no extra cost to you.</i>"
     return ""
+
+
+def ecosystem_compact():
+    """Standalone 'OFFICIAL ECOSYSTEM & LINKS' post (owner's compact layout). Empty rows/groups are skipped."""
+    e = lambda u: html.escape(u, quote=False)
+    def row(label, url, emoji="•"):
+        return f"{emoji} {label}: {e(url)}" if _clean(url) else ""
+    prem = f"• Join Premium: DM {config.PREMIUM_HANDLE} → {e(config.PREMIUM_LINK)}" if _clean(config.PREMIUM_LINK) else ""
+    social = "   ".join(x for x in (row("X / Twitter", config.X_LINK, "💙"), row("YouTube", config.YOUTUBE_LINK, "▶️")) if x)
+    groups = [("💎 VIP & Signals", [prem, row("Main Channel", config.TELEGRAM_LINK)]),
+              ("🤝 Execution & Copy Trading", [row("BloFin Copy Trading", config.COPY_TRADING_LINK),
+                                               row("Trade on BloFin (Fee Rebate)", config.BLOFIN_REF_LINK),
+                                               row("Binance Square", config.BINANCE_CREATOR_LINK)]),
+              ("📲 Media & Socials", [social])]
+    parts = [f"<b>{t}</b>\n" + "\n".join(r for r in rows if r) for t, rows in groups if any(rows)]
+    if not parts:
+        return ""
+    from .caption import SEP
+    text = "<b>🌐 OFFICIAL ECOSYSTEM & LINKS</b>\n\n" + "\n\n".join(parts) + f"\n{SEP}"
+    d = disclosure()
+    return text + ("\n\n" + d if d else "")

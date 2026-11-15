@@ -9,7 +9,8 @@ chmod +x scripts/*.sh
 grep -q '^RANDOM_SECRET=.\{8,\}' .env || { echo "RANDOM_SECRET=$(openssl rand -hex 16)" >> .env; echo "Added a random RANDOM_SECRET to .env"; }
 block="# >>> trader-hydr automation >>>
 */5 * * * * $D/scripts/run_signals.sh
-15 * * * * $D/scripts/gate_outlook.sh"
+15 * * * * $D/scripts/gate_outlook.sh
+20 * * * * $D/scripts/gate_links.sh"
 if [ "${1:-}" != "--no-reports" ]; then
   block="$block
 10 * * * * $D/scripts/gate_reports.sh"

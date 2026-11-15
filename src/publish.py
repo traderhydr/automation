@@ -61,6 +61,12 @@ def telegram_post(paths, caption, chats=None):
     return _each(chats or config.PUBLIC_CHANNELS, send)
 
 
+def telegram_text(text, chats=None):
+    """Text-only post to each chat; returns the chats that worked."""
+    return _each(chats or config.PUBLIC_CHANNELS, lambda chat: _tg("sendMessage", data={
+        "chat_id": chat, "text": (text + MARK)[:4096], "parse_mode": "HTML", "disable_web_page_preview": True}))
+
+
 def discord_post(paths, text):
     if not config.DISCORD_WEBHOOK_URL:
         return
@@ -116,7 +122,8 @@ def preview_to_me(paths, text):
 
     async def go():
         async with TelegramClient(StringSession(config.TG_SESSION_STRING), config.TG_API_ID, config.TG_API_HASH) as c:
-            await c.send_file("me", paths[:10], force_document=False)
+            if paths:
+                await c.send_file("me", paths[:10], force_document=False)
             await c.send_message("me", text[:4096], parse_mode="html", link_preview=False)
     asyncio.run(go())
     print("Preview sent to your Telegram Saved Messages.")

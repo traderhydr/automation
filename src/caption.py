@@ -41,7 +41,7 @@ def telegram_report(today, month, period, label):
     note = f"(Figures reflect the sum of all closed trades, stop-losses included. {config.PNL_NOTE}.)"
     parts = [f"<b>📊 {pw} PERFORMANCE REPORT · {label}</b>", SEP + "\n" + _intro(today),
              "<b>⚡ THE BREAKDOWN</b>", "\n".join(rows), note + "\n" + SEP]
-    eco = links.ecosystem_block()
+    eco = links.ecosystem_block() if config.LINKS_IN_POSTS else ""
     if eco:
         parts += [eco, SEP]
     return "\n\n".join(parts)
@@ -105,7 +105,7 @@ def make_captions(today, month, period="daily", label=""):
     from . import links
     c["links_tg"], c["links_plain"] = links.telegram_block(), links.plain_block()
     # Telegram post = the owner's template (exact real numbers); Claude/fallback text is only used for X + hashtags
-    c["telegram"] = "\n\n".join(x for x in (telegram_report(today, month, period, label), tags, links.disclosure(), DISCLAIMER) if x)
+    c["telegram"] = "\n\n".join(x for x in (telegram_report(today, month, period, label), tags, links.disclosure() if config.LINKS_IN_POSTS else "", DISCLAIMER) if x)
     c["tags"] = tags
     c["x_tags"] = " ".join(list(dict.fromkeys(c.get("hashtags") or BASE_TAGS))[:3])
     return c
@@ -115,8 +115,8 @@ def clean_post(title, body_blocks, tags, closing_disclaimer):
     """Same clean layout as the report template: title, ━━━ separators, blank lines, grouped links, disclosure."""
     from . import links
     parts = [f"<b>{title}</b>", SEP + "\n" + "\n\n".join(b for b in body_blocks if b) + "\n" + SEP]
-    eco = links.ecosystem_block()
+    eco = links.ecosystem_block() if config.LINKS_IN_POSTS else ""
     if eco:
         parts += [eco, SEP]
-    parts += [x for x in (tags, links.disclosure(), closing_disclaimer) if x]
+    parts += [x for x in (tags, links.disclosure() if config.LINKS_IN_POSTS else "", closing_disclaimer) if x]
     return "\n\n".join(parts)

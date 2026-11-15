@@ -170,3 +170,13 @@ class ShortSignalPost(unittest.TestCase):
 🔒 Premium members get every signal live: DM @Hydrzoro to join
 ━━━━━━━━━━━━━━━━━━━"""
         self.assertEqual(plain, expected)
+
+
+class LinksPost(unittest.TestCase):
+    def test_compact_links_block_layout(self):
+        from src import links
+        b = links.ecosystem_compact()
+        plain = b.replace("<b>", "").replace("</b>", "").replace("<i>", "").replace("</i>", "")
+        self.assertTrue(plain.startswith("🌐 OFFICIAL ECOSYSTEM & LINKS\n\n💎 VIP & Signals\n• Join Premium: DM @Hydrzoro → https://t.me/Hydrzoro\n• Main Channel:"))
+        self.assertIn("🤝 Execution & Copy Trading\n• BloFin Copy Trading:", plain)
+        self.assertIn("📲 Media & Socials\n💙 X / Twitter: https://x.com/Trader_Hydr   ▶️ YouTube: https://youtube.com/@traderhydr\n━━━", plain)
