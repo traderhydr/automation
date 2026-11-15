@@ -98,6 +98,9 @@ def x_post(paths, text, tags=""):
 
 def _x_links_reply(client, first):
     """Links go in a reply under the post (keeps the main post clean). Plain text, <= 280 chars."""
+    import os
+    if os.getenv("X_LINK_REPLY", "1") == "0":      # save API quota: skip the links reply
+        return
     from . import links
     txt = links.plain_block()
     if txt:
