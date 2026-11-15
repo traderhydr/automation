@@ -21,6 +21,8 @@ def safe(fn, *args, **kw):
 
 def x_enabled(kind):
     """X_POST_KINDS=reports,signals,outlook (default all). X now bills per post, so you can post only some kinds there."""
+    if os.getenv("X_ENABLED", "1") == "0":                       # master switch: X_ENABLED=0 = never post to X
+        return False
     return kind in os.getenv("X_POST_KINDS", "reports,signals,outlook").replace(" ", "").split(",")
 
 
@@ -188,7 +190,7 @@ def run_scenario(a):
         if "telegram" in dest:
             publish.telegram_photo(path, cap, config.CHANNELS_OUTLOOK)
         if "discord" in dest: safe(publish.discord_post, [path], f"{base} outlook\n{tags}")
-        if "x" in dest and (x_enabled("outlook") or a.only): safe(publish.x_post, [path], f"📊 #{base} outlook: {fmt(lv['last'])} ({lv['chg24']:+.2f}% 24h). Support {fmt(lv['zone_mid'])} | Resistance {fmt(lv['resistance'])}. Bounce or dump? 👇", " ".join(tags.split()[:3]))
+        if "x" in dest and (x_enabled("outlook") or (a.only and os.getenv("X_ENABLED", "1") != "0")): safe(publish.x_post, [path], f"📊 #{base} outlook: {fmt(lv['last'])} ({lv['chg24']:+.2f}% 24h). Support {fmt(lv['zone_mid'])} | Resistance {fmt(lv['resistance'])}. Bounce or dump? 👇", " ".join(tags.split()[:3]))
 
 
 def main():
