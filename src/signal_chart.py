@@ -13,6 +13,12 @@ BG, GRID, UP, DN = "#0b0e14", "#1b212c", "#26a65b", "#e0453f"
 GREEN, RED, BLUE, GOLD, FG = "#4ade80", "#f87171", "#60a5fa", "#f5c22b", "#e8eefc"
 
 
+def exact(p):
+    """Price exactly as posted (no rounding, never scientific notation): 0.065037 -> '0.065037', 3.533 -> '3.533'."""
+    from decimal import Decimal
+    return format(Decimal(repr(float(p))), "f")
+
+
 def fmt(p):
     dec = max(2, 3 - math.floor(math.log10(abs(p)))) if p else 2
     return f"{p:,.{dec}f}"
@@ -55,7 +61,7 @@ def signal_chart(sig, candles, interval, source, path):
             ax.plot([n + pad - 14, n + pad - 11], [price, y], color=color, lw=1, zorder=5)
         ax.text(n + pad - 0.5, y, f" {label} ", color=color, fontsize=11, weight="bold", ha="right", va="center",
                 zorder=6, bbox=dict(boxstyle="round,pad=0.25", fc=BG, ec=color, lw=1.2))
-        ax.text(n + pad + 0.3, y, fmt(price), color=BG, fontsize=9.5, weight="bold", ha="left", va="center",
+        ax.text(n + pad + 0.3, y, exact(price), color=BG, fontsize=9.5, weight="bold", ha="left", va="center",
                 zorder=6, clip_on=False, bbox=dict(boxstyle="square,pad=0.25", fc=color, ec=color))
 
     # where the trade opened

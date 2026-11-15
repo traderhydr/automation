@@ -133,3 +133,18 @@ class NewCornixLayout(unittest.TestCase):
 
     def test_old_layout_still_works(self):
         self.assertEqual(parse_signals(msgs(INJ_SIGNAL))[0]["symbol"], "INJUSDT")
+
+
+class PriceFormatting(unittest.TestCase):
+    def test_signal_levels_are_shown_exactly_as_posted(self):
+        from src.signals import signal_caption
+        doge = ("#DOGE/USDT\nSHORT\nTimeframe: 15m\nEntry Targets:\n1) 0.064790\n2) 0.065037\n3) 0.065283\n"
+                "Take-Profit Targets:\n1) 0.063968\n2) 0.063146\n3) 0.062323\n4) 0.060679\nStop Targets:\n1) 0.066434\nLeverage: Cross (15X)")
+        cap, _ = signal_caption(parse_signals(msgs(doge))[0], "open", 0, "")
+        for must in ("0.06479 / 0.065037 / 0.065283", "0.063968 → 0.063146 → 0.062323 → 0.060679", "0.066434"):
+            self.assertIn(must, cap)
+        tiny = ("#PEPE/USDT\nLONG\nTimeframe: 5m\nEntry Targets:\n1) 0.000004922\nTake-Profit Targets:\n1) 0.000004951\n"
+                "Stop Targets:\n1) 0.000004668\nLeverage: Cross (25X)")
+        cap2, _ = signal_caption(parse_signals(msgs(tiny))[0], "open", 0, "")
+        self.assertIn("0.000004922", cap2)
+        self.assertNotIn("e-06", cap2)

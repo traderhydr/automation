@@ -132,7 +132,7 @@ def fetch_candles(symbol, interval="15m", limit=96, end_ms=None):
 
 
 def signal_caption(sig, status=None, delay_min=None, premium_link=""):
-    from .signal_chart import fmt
+    from .signal_chart import exact as fmt
     from .caption import clean_post
     rr = risk_reward(sig)
     side_emoji = "🟢" if sig["side"] == "LONG" else "🔴"
