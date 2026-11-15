@@ -98,3 +98,38 @@ class FreeSampleFreshness(unittest.TestCase):
         self.assertEqual(sd["assigned"], {})                      # 3h-old signal ignored
         ps.assign(sd, [old, new], now, max_age_min=30)
         self.assertEqual([v["sig"]["id"] for v in sd["assigned"].values()], [2])
+
+
+KAVA_SIGNAL = """#KAVA/USDT
+SHORT
+Timeframe: 5m
+Entry Targets:
+1) 0.031060
+2) 0.031245
+3) 0.031430
+Take-Profit Targets:
+1) 0.030443
+2) 0.029826
+3) 0.029208
+4) 0.027974
+Stop Targets:
+1) 0.032294
+Leverage: Cross (15X)"""
+
+
+class NewCornixLayout(unittest.TestCase):
+    def test_new_layout_signal_parsed(self):
+        s = parse_signals(msgs(KAVA_SIGNAL))[0]
+        self.assertEqual((s["symbol"], s["side"], s["leverage"], s["timeframe"]), ("KAVAUSDT", "SHORT", 15, "5m"))
+        self.assertEqual((len(s["entries"]), len(s["tps"]), s["sl"]), (3, 4, 0.032294))
+        rr = risk_reward(s)
+        self.assertEqual((rr["risk_pct"], rr["tps"][0]["rr"], rr["final_rr"]), (3.97, 0.5, 2.5))
+
+    def test_new_layout_signal_is_not_a_trade_and_gives_the_side(self):
+        t = parse_trades(msgs(KAVA_SIGNAL, "#KAVA/USDT Entry 1 ✅\nAverage Entry Price: 0.03106 💵",
+                              "#KAVA/USDT Take-Profit target 1 ✅\nProfit: 9.5% 📈\nPeriod: 4 min ⏰",
+                              "#KAVA/USDT All targets achieved 😎\nProfit: 32.1% 📈\nPeriod: 2 hr ⏰"))
+        self.assertEqual([(x["symbol"], x["side"], x["pnl_pct"]) for x in t], [("KAVAUSDT", "SHORT", 32.1)])
+
+    def test_old_layout_still_works(self):
+        self.assertEqual(parse_signals(msgs(INJ_SIGNAL))[0]["symbol"], "INJUSDT")

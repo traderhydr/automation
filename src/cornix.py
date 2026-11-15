@@ -31,8 +31,20 @@ def is_cornix(text):
     return bool(PAIR.search(text) and (SIGNAL_MARK.search(text) or PNL.search(text) or PARTIAL.search(text) or FINAL.search(text)))
 
 
+def _side_at(lst, when):
+    """Side of the most recent signal for this coin posted at/before `when` (best effort; None if unknown)."""
+    if not lst:
+        return None
+    prior = [x for x in lst if x[0] <= when]
+    return max(prior)[1] if prior else None
+
+
 def parse_cornix(messages):
     """Returns (trades, handled_ids). trades: {id,date,symbol,side,pnl_pct}"""
+    from .signals import parse_signals
+    sig_list = {}
+    for s in parse_signals(messages):                       # both signal layouts
+        sig_list.setdefault(s["symbol"], []).append((s["date"], s["side"]))
     sides = {}
     for m in messages:  # remember side per symbol from signal posts in this batch
         p, s = PAIR.search(m["text"]), SIGNAL_SIDE.search(m["text"])
@@ -61,5 +73,5 @@ def parse_cornix(messages):
             val = -abs(val)
         sym = p.group(1) + p.group(2)
         trades.append({"id": m["id"], "date": m["date"], "symbol": sym,
-                       "side": sides.get(sym, "UNKNOWN"), "pnl_pct": val})
+                       "side": _side_at(sig_list.get(sym), m["date"]) or sides.get(sym, "UNKNOWN"), "pnl_pct": val})
     return trades, handled

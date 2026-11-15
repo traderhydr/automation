@@ -12,22 +12,45 @@ def _line(t, key):
     return m.group(1).strip() if m else ""
 
 
+def _list_after(t, header_regex):
+    """Numbered list under a header, e.g. 'Entry Targets:\n1) 0.031\n2) 0.032' -> ['0.031', '0.032']."""
+    m = re.search(rf"(?:{header_regex})\s*:?\s*\n?((?:[ \t]*\d+\)[ \t]*\d+(?:\.\d+)?[ \t]*\n?)+)", t, re.I)
+    return re.findall(r"\d+\)\s*(\d+(?:\.\d+)?)", m.group(1)) if m else []
+
+
+def _parse_one(m):
+    """Returns a signal dict or None. Two layouts are understood:
+    A) own template:   Pair: ORDIUSDT / Direction: LONG / Entry: a-b-c / Take Profits: ... / Stop Loss: x
+    B) Cornix layout:  #KAVA/USDT / SHORT / Timeframe: 5m / Entry Targets: 1) .. / Take-Profit Targets: 1) .. / Stop Targets: 1) .. / Leverage: Cross (15X)"""
+    t = m["text"]
+    pair = re.search(r"pair\s*:\s*#?([A-Z0-9]{2,15}?)(?:/)?(USDT|USDC)\b", t, re.I)
+    d = re.search(r"direction\s*:\s*(long|short)", t, re.I)
+    entries, tps, sl = NUM.findall(_line(t, "Entry")), NUM.findall(_line(t, r"Take Profits?")), NUM.findall(_line(t, "Stop Loss"))
+    strategy, tf = _line(t, "Strategy"), None
+    if not (pair and d and entries and tps and sl):                       # layout B
+        pair = re.search(r"#?\b([A-Z0-9]{2,15})\s*/\s*(USDT|USDC)\b", t)
+        d = re.search(r"^\W*(LONG|SHORT)\W*$", t, re.I | re.M)
+        entries = _list_after(t, r"Entry Targets?|Entry Orders?")
+        if not entries:
+            z = re.search(r"Entry Zone\s*:\s*(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)", t, re.I)
+            entries = list(z.groups()) if z else []
+        tps = _list_after(t, r"Take[- ]?Profit Targets?|Take Profits?")
+        sl = _list_after(t, r"Stop Targets?|Stop Loss(?:es)?") or NUM.findall(_line(t, r"Stop(?: Loss)?"))
+        tfm = re.search(r"Timeframe\s*:\s*(\d+\s*[mhd])", t, re.I)
+        tf = tfm.group(1).replace(" ", "").lower() if tfm else None
+    if not (pair and d and entries and tps and sl):
+        return None
+    lev = re.search(r"(\d+)\s*X", _line(t, "Leverage"), re.I)
+    return {
+        "id": m["id"], "date": m["date"], "symbol": pair.group(1).upper() + pair.group(2).upper(),
+        "base": pair.group(1).upper(), "side": d.group(1).upper(),
+        "leverage": int(lev.group(1)) if lev else None, "strategy": strategy,
+        "timeframe": tf, "entries": [float(x) for x in entries], "tps": [float(x) for x in tps], "sl": float(sl[0]),
+    }
+
+
 def parse_signals(messages):
-    """Own signal template:  Pair: ORDIUSDT / Direction: LONG / Leverage: Cross 25X / Entry: a-b-c / Take Profits: ... / Stop Loss: x"""
-    out = []
-    for m in messages:
-        t = m["text"]
-        pair, d = re.search(r"pair\s*:\s*#?([A-Z0-9]{2,15}?)(?:/)?(USDT|USDC)\b", t, re.I), re.search(r"direction\s*:\s*(long|short)", t, re.I)
-        entries, tps, sl = NUM.findall(_line(t, "Entry")), NUM.findall(_line(t, r"Take Profits?")), NUM.findall(_line(t, "Stop Loss"))
-        if not (pair and d and entries and tps and sl):
-            continue
-        lev = re.search(r"(\d+)\s*X", _line(t, "Leverage"), re.I)
-        out.append({
-            "id": m["id"], "date": m["date"], "symbol": pair.group(1).upper() + pair.group(2).upper(),
-            "base": pair.group(1).upper(), "side": d.group(1).upper(),
-            "leverage": int(lev.group(1)) if lev else None, "strategy": _line(t, "Strategy"),
-            "entries": [float(x) for x in entries], "tps": [float(x) for x in tps], "sl": float(sl[0]),
-        })
+    out = [s for s in (_parse_one(m) for m in messages) if s]
     for s in out:
         find_fill(s, messages)
     return out

@@ -97,7 +97,7 @@ def run_signals(a):
         newest = min((now - datetime.fromisoformat(s["date"])).total_seconds() / 60 for s in sigs)
         print(f"read {len(msgs)} messages, found {len(sigs)} signals; newest signal is {newest:.0f} min old")
     else:
-        likely = [m_ for m_ in msgs if "pair" in m_["text"].lower() and "direction" in m_["text"].lower()]
+        likely = [m_ for m_ in msgs if ("pair" in m_["text"].lower() and "direction" in m_["text"].lower()) or "entry targets" in m_["text"].lower()]
         print(f"read {len(msgs)} messages, found 0 signals" + (f" – BUT {len(likely)} look like signals and did not parse (format changed?)" if likely else
                                                            " (no new signals posted in the channel in this window)"))
     state = ps.load()
@@ -114,6 +114,7 @@ def run_signals(a):
     for slot, v in ps.due_to_post(sd, now, delay, lapse_min=config.PUBLIC_SIGNAL_MAX_AGE_MIN):
         sig = signals.find_fill(v["sig"], msgs)
         ref = datetime.fromisoformat(sig.get("fill", {}).get("date", sig["date"])).timestamp() * 1000
+        iv = sig.get("timeframe") if sig.get("timeframe") in signals._MS else config.SIGNAL_INTERVAL   # chart in the signal's own timeframe
         try:
             candles, src = signals.fetch_candles(sig["symbol"], iv, 96)       # up to NOW, so the chart shows what happened since
         except Exception as e:

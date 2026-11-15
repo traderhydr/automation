@@ -11,7 +11,7 @@ msgs = fetch_messages(hours)
 
 def kind(t):
     low = t.lower()
-    if "pair" in low and ("direction" in low or "entry" in low): return "NEW SIGNAL"
+    if ("pair" in low and ("direction" in low or "entry" in low)) or "entry targets" in low or "entry orders" in low or "entry zone" in low: return "NEW SIGNAL"
     if re.search(r"entry \d+|all entries", low): return "entry fill"
     if "take-profit target" in low: return "take-profit hit"
     if "all targets achieved" in low or "all take-profit" in low: return "all targets"
