@@ -93,6 +93,13 @@ def run_signals(a):
     now = datetime.now(tz)
     msgs = fetch_messages(max(1, a.hours))
     sigs = signals.parse_signals(msgs)
+    if sigs:
+        newest = min((now - datetime.fromisoformat(s["date"])).total_seconds() / 60 for s in sigs)
+        print(f"read {len(msgs)} messages, found {len(sigs)} signals; newest signal is {newest:.0f} min old")
+    else:
+        likely = [m_ for m_ in msgs if "pair" in m_["text"].lower() and "direction" in m_["text"].lower()]
+        print(f"read {len(msgs)} messages, found 0 signals" + (f" – BUT {len(likely)} look like signals and did not parse (format changed?)" if likely else
+                                                           " (no new signals posted in the channel in this window)"))
     state = ps.load()
     day = now.date().isoformat()
     sd = state.setdefault(day, {"slots": ps.plan_slots(now.date(), config.PUBLIC_SIGNALS_PER_DAY, config.PUBLIC_WINDOW_START,
