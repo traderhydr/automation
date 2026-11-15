@@ -35,6 +35,9 @@ Use `--until` to stop where the live Telegram pipeline starts (different ids, so
 Logs are in `logs/*.log`. Add `--no-reports` to leave out the results reports. The installer also creates `RANDOM_SECRET` in `.env` if missing.
 Results reports refuse to post while `MARGIN_PER_TRADE_PCT=100` (raw ROI) unless `ALLOW_RAW_ROI=1`: set it to the % of your account each trade uses (e.g. `2`) so the headline is an **account return**.
 
+## Free-sample post format
+`SIGNAL_POST_STYLE=short` (default) posts the compact format (title, entry/TPs/SL, risk:reward, status, free-sample + premium lines). `full` adds the links block, hashtags, referral disclosure and risk disclaimer.
+
 ## Several channels
 `PUBLIC_CHANNEL=@public1,@public2,-1001234567890` – every listed channel gets the same posts (a private/invite-only channel has no @username: use its numeric `-100…` id; the bot must be an admin with *Post Messages* in each). Delivery is **per channel**: if one fails, the others still get the post and only the failed one is retried next run (state in `data/posted_reports.json` / `data/public_signals.json`). Discord/X are posted once. `python -m src.check_bot` tests every channel without posting.
 

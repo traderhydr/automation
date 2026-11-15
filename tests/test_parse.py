@@ -148,3 +148,25 @@ class PriceFormatting(unittest.TestCase):
         cap2, _ = signal_caption(parse_signals(msgs(tiny))[0], "open", 0, "")
         self.assertIn("0.000004922", cap2)
         self.assertNotIn("e-06", cap2)
+
+
+class ShortSignalPost(unittest.TestCase):
+    def test_short_format_matches_owner_template(self):
+        from src.signals import signal_caption
+        doge = ("#DOGE/USDT\nSHORT\nTimeframe: 15m\nEntry Targets:\n1) 0.064790\n2) 0.065037\n3) 0.065283\n"
+                "Take-Profit Targets:\n1) 0.063968\n2) 0.063146\n3) 0.062323\n4) 0.060679\nStop Targets:\n1) 0.066434\nLeverage: Cross (15X)")
+        cap, _ = signal_caption(parse_signals(msgs(doge))[0], "open", 0, "https://t.me/Hydrzoro")
+        plain = cap.replace("<b>", "").replace("</b>", "").replace("<i>", "").replace("</i>", "")
+        expected = """#DOGE SHORT · 15X 🔴
+
+━━━━━━━━━━━━━━━━━━━
+• Entry: 0.06479 / 0.065037 / 0.065283
+• Take Profits: 0.063968 → 0.063146 → 0.062323 → 0.060679
+• Stop Loss: 0.066434
+• Risk : Reward: 1 : 2.5 (to TP4) · risk 2.54% price move
+• Status: ⏳ Still open
+
+🎁 Free sample from our premium channel. You can take it live.
+🔒 Premium members get every signal live: DM @Hydrzoro to join
+━━━━━━━━━━━━━━━━━━━"""
+        self.assertEqual(plain, expected)

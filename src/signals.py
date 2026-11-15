@@ -157,6 +157,9 @@ def signal_caption(sig, status=None, delay_min=None, premium_link=""):
         note = "🎁 <i>Free sample from our premium channel. You can take it live.</i>"
         if premium_link:
             note += f"\n🔒 Premium members get every signal live: DM {config.PREMIUM_HANDLE} to join"
+    if config.SIGNAL_POST_STYLE == "short":          # the owner's compact format
+        from .caption import SEP
+        return f"<b>#{sig['base']} {sig['side']}{lev} {side_emoji}</b>\n\n{SEP}\n" + "\n".join(lines) + f"\n\n{note}\n{SEP}", tags
     title = f"⚡ #{sig['base']} {sig['side']}{lev} {side_emoji}"
     return clean_post(title, ["\n".join(lines), note], tags,
                       "⚠️ Not financial advice. Leveraged trading carries high risk. Not every trade wins."), tags
