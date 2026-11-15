@@ -69,7 +69,7 @@ def _fallback(today, month, period="daily", label=""):
                      f"📈 30-day: <b>{month['total_pct']:+.1f}%</b> · Win rate {month['win_rate']}%\n\n"
                      f"{_teaser_line(today)}<i>{TRANSPARENCY}</i>\n\n👉 Join: {config.JOIN_LINK}"),
         "short": (f"{emoji} {PERIOD_LABEL[period]}: {today['wins']}/{today['trades']} in profit, "
-                  f"total {today['total_pct']:+.2f}% (losses included). Join: {config.JOIN_LINK}"),
+                  f"total {today['total_pct']:+.2f}% ({config.PNL_NOTE}, losses included). Join: {config.JOIN_LINK}"),
         "hashtags": BASE_TAGS,
     }
 
@@ -89,7 +89,7 @@ def make_captions(today, month, period="daily", label=""):
             f"This is the {period} report for {label}" + (" (a whole year: celebrate the milestone, stay humble)" if period == "yearly" else "") + ". "
             "STYLE: confident, punchy, short lines, emojis like 📊✅🔥📈, headline with the date/period, then X/Y in profit and total. Always include a transparency line (all closed trades, losses included, leveraged returns). Include #DailyResults. "
             "Write: (1) 'telegram': an energetic, emoji-rich post in Telegram HTML (<b>, <i> only), max 700 chars, "
-            "ending with a call-to-action to join. (2) 'short': under 240 chars for X/Twitter, with the join link. "
+            "ending with a call-to-action to join. (2) 'short': under 200 chars for X/Twitter, with the join link, and it MUST state the basis: '{config.PNL_NOTE}' and that losses are included. "
             "(3) 'hashtags': 8-10 relevant hashtags. RULES: use ONLY the numbers given, never promise or imply "
             "guaranteed profit, no 'risk-free'/'guaranteed'. If the period was a loss, be honest and frame it with "
             "the 30-day record and risk management. Reply with ONLY JSON {telegram, short, hashtags}."

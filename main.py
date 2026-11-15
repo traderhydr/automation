@@ -10,6 +10,15 @@ from src import config, stats, charts, caption
 from src.periods import PERIODS, window
 
 
+def safe(fn, *args, **kw):
+    """Run an extra destination (Discord / X). A failure there is logged but never stops the run, so Telegram's
+    'already posted' bookkeeping is always saved and nothing gets re-posted."""
+    try:
+        return fn(*args, **kw)
+    except Exception as e:
+        print(f"⚠️  {getattr(fn, '__name__', 'extra post')} failed (continuing): {e}")
+
+
 def load_history(path=None):
     path = path or os.getenv("HISTORY_PATH", "data/trades.json")
     return json.load(open(path)) if os.path.exists(path) else []
@@ -57,8 +66,8 @@ def _post_signal(sig, status_candles_src, iv, status, delay_min, a, chats=None, 
     ok = publish.telegram_photo(path, cap, chats or config.CHANNELS_SIGNALS)
     if not extras:
         return ok
-    publish.discord_post([path], f"{sig['base']} {sig['side']} | R:R 1:{rr} (free sample)\n{tags}")
-    publish.x_post([path], f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | free sample from our premium channel. Entry, TPs & SL on chart 👇" if not delay_min else f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | shared {delay_min} min after premium members. Details on chart 👇", " ".join(tags.split()[:3]))
+    safe(publish.discord_post, [path], f"{sig['base']} {sig['side']} | R:R 1:{rr} (free sample)\n{tags}")
+    safe(publish.x_post, [path], f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | free sample from our premium channel. Entry, TPs & SL on chart 👇" if not delay_min else f"⚡ #{sig['base']} {sig['side']} | R:R 1:{rr} | shared {delay_min} min after premium members. Details on chart 👇", " ".join(tags.split()[:3]))
     return ok
 
 
@@ -135,14 +144,17 @@ def run_scenario(a):
         if a.demo or config.DRY_RUN:
             print("[DRY RUN] nothing posted.\n"); continue
         from src import publish
-        publish.telegram_photo(path, cap, config.CHANNELS_OUTLOOK)
-        publish.discord_post([path], f"{base} outlook\n{tags}")
-        publish.x_post([path], f"📊 #{base} outlook: {fmt(lv['last'])} ({lv['chg24']:+.2f}% 24h). Support {fmt(lv['zone_mid'])} | Resistance {fmt(lv['resistance'])}. Bounce or dump? 👇", " ".join(tags.split()[:3]))
+        dest = set((a.only or "telegram,discord,x").split(","))      # --only x  = test X alone
+        if "telegram" in dest:
+            publish.telegram_photo(path, cap, config.CHANNELS_OUTLOOK)
+        if "discord" in dest: safe(publish.discord_post, [path], f"{base} outlook\n{tags}")
+        if "x" in dest: safe(publish.x_post, [path], f"📊 #{base} outlook: {fmt(lv['last'])} ({lv['chg24']:+.2f}% 24h). Support {fmt(lv['zone_mid'])} | Resistance {fmt(lv['resistance'])}. Bounce or dump? 👇", " ".join(tags.split()[:3]))
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true")
+    ap.add_argument("--only", help="with --scenario: comma list of destinations (telegram,discord,x), e.g. --only x to test X alone")
     ap.add_argument("--preview", action="store_true", help="send the result to YOUR Telegram Saved Messages (nothing public)")
     ap.add_argument("--no-fetch", action="store_true", help="build the report from saved history only (no Telegram)")
     ap.add_argument("--scenario", metavar="SYMBOLS", help="market outlook chart(s), e.g. BTCUSDT,ETHUSDT")
@@ -225,8 +237,8 @@ def main():
     first_attempt = not any(k.startswith(rkey + "|") for k in done) and rkey not in done
     ok = publish.telegram_post(paths, cap["telegram"], todo)
     if first_attempt or a.force:                         # Discord / X only once per report, even if a retry is needed
-        publish.discord_post(paths, cap["short"] + "\n" + cap["tags"])
-        publish.x_post(paths, cap["short"], cap["x_tags"])
+        safe(publish.discord_post, paths, cap["short"] + "\n" + cap["tags"])
+        safe(publish.x_post, paths, cap["short"], cap["x_tags"])
     done.update(f"{rkey}|{c}" for c in ok)
     os.makedirs("data", exist_ok=True); json.dump(sorted(done), open(rpath, "w"))
     failed = [c for c in todo if c not in ok]
