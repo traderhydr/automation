@@ -36,7 +36,7 @@ Logs are in `logs/*.log`. Add `--no-reports` to leave out the results reports. T
 Results reports refuse to post while `MARGIN_PER_TRADE_PCT=100` (raw ROI) unless `ALLOW_RAW_ROI=1`: set it to the % of your account each trade uses (e.g. `2`) so the headline is an **account return**.
 
 ## Standalone links post
-`python main.py --links-post` posts the compact OFFICIAL ECOSYSTEM & LINKS block (no image) to every channel. The hourly `scripts/gate_links.sh` (installed by `install_cron.sh`) posts it on `LINKS_POST_DAYS` (default 1,11,21) from `LINKS_POST_HOUR` (default 18:00 local), once per channel per day. Preview to your Saved Messages: `python main.py --links-post --preview`. Not sent to X (length/cost). Set `LINKS_IN_POSTS=0` to drop the links block from reports/BTC posts.
+`python main.py --links-post` posts the compact OFFICIAL ECOSYSTEM & LINKS block (no image) to every channel. The hourly `scripts/gate_links.sh` (installed by `install_cron.sh`) posts it on `LINKS_POST_DAYS` (default 1,11,21) from `LINKS_POST_HOUR` (default 18:00 local), once per channel per day. Preview to your Saved Messages: `python main.py --links-post --preview`. Not sent to X (length/cost). Reports and BTC posts carry **no** links block by default (`LINKS_IN_POSTS=0`); set `LINKS_IN_POSTS=1` to append it again.
 
 ## Free-sample post format
 `SIGNAL_POST_STYLE=short` (default) posts the compact format (title, entry/TPs/SL, risk:reward, status, free-sample + premium lines). `full` adds the links block, hashtags, referral disclosure and risk disclaimer.

@@ -199,3 +199,14 @@ class ImprovedDailyReport(unittest.TestCase):
                      "FREE SAMPLES CLOSED TODAY", "BONK -0.89% ❌", "Result: 1W / 2L · net -0.75%", "1 free sample still open"):
             self.assertIn(must, txt)
         self.assertNotIn("1000BONK", txt)
+
+
+class NoLinksInReports(unittest.TestCase):
+    def test_reports_and_outlook_have_no_links_block_by_default(self):
+        from src import caption, scenario
+        today = {"wins": 3, "losses": 1, "trades": 4, "win_rate": 75.0, "total_pct": 1.2, "best": 1, "worst": -0.5, "profit_factor": 2.0,
+                 "avg_win": 0.5, "avg_loss": -0.3, "max_drawdown": 1.0, "days": ["d"], "teaser": {"closed": 0, "wins": 0, "losses": 0, "total": 0, "open": 0, "items": []}}
+        c = caption.make_captions(today, {"days": ["d"], "win_rate": 75, "total_pct": 1.2}, "daily", "17 NOV 2026")
+        self.assertNotIn("OFFICIAL ECOSYSTEM", c["telegram"])
+        self.assertNotIn("Referral", c["telegram"])
+        self.assertIn("Not financial advice", c["telegram"])         # the risk disclaimer stays
