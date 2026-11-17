@@ -180,3 +180,22 @@ class LinksPost(unittest.TestCase):
         self.assertTrue(plain.startswith("🌐 OFFICIAL ECOSYSTEM & LINKS\n\n💎 VIP & Signals\n• Join Premium: DM @Hydrzoro → https://t.me/Hydrzoro\n• Main Channel:"))
         self.assertIn("🤝 Execution & Copy Trading\n• BloFin Copy Trading:", plain)
         self.assertIn("📲 Media & Socials\n💙 X / Twitter: https://x.com/Trader_Hydr   ▶️ YouTube: https://youtube.com/@traderhydr\n━━━", plain)
+
+
+class ImprovedDailyReport(unittest.TestCase):
+    def test_running_totals_movers_and_samples(self):
+        from src import caption
+        st = lambda **k: {"trades": 54, "wins": 25, "losses": 29, "win_rate": 46.3, "total_pct": -15.94, "best": 1.21, "worst": -8.8,
+                          "profit_factor": 0.62, "avg_win": 0.45, "avg_loss": -0.94, "max_drawdown": 20.0, "days": ["d"] * 18,
+                          "top_win": [["IMX", 1.21]], "top_loss": [["AGT", -8.8]],
+                          "teaser": {"closed": 3, "wins": 1, "losses": 2, "total": -0.75, "open": 1,
+                                     "items": [["1000BONK", -0.89], ["SNXX", 0.32], ["TRX", -0.18]]}, **k}
+        today = st()
+        extra = {"prev": st(total_pct=4.2, trades=40, wins=30), "wtd": st(trades=140, total_pct=-7.1, win_rate=55.0),
+                 "mtd": st(trades=400, total_pct=-12.4, win_rate=58.0), "all": st(trades=1190, total_pct=-23.4, win_rate=60.9)}
+        txt = caption.telegram_report(today, {"days": [], "win_rate": 0, "total_pct": 0}, "daily", "17 NOV 2026", extra)
+        for must in ("Profit Factor: 0.62 · Avg Win +0.45% · Avg Loss -0.94%", "Yesterday: +4.20%", "Week-to-Date: -7.10%",
+                     "Month-to-Date: -12.40%", "Since Tracking Began (18 days): -23.40%", "TOP MOVERS", "Losers: AGT -8.80%",
+                     "FREE SAMPLES CLOSED TODAY", "BONK -0.89% ❌", "Result: 1W / 2L · net -0.75%", "1 free sample still open"):
+            self.assertIn(must, txt)
+        self.assertNotIn("1000BONK", txt)

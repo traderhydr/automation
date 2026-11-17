@@ -42,6 +42,8 @@ def compute(trades, bucket="day"):
         "max_drawdown": round(max_dd, 2),
         "items": sorted(([t["symbol"].replace("USDT", ""), round(t["pnl_pct"], 2), bool(t.get("teaser"))] for t in trades), key=lambda x: -x[1]),
         "teaser": _teaser(trades),
+        "top_win": [x[:2] for x in sorted(([t["symbol"].replace("USDT", ""), round(t["pnl_pct"], 2)] for t in trades if t["pnl_pct"] > 0), key=lambda x: -x[1])[:3]],
+        "top_loss": [x[:2] for x in sorted(([t["symbol"].replace("USDT", ""), round(t["pnl_pct"], 2)] for t in trades if t["pnl_pct"] < 0), key=lambda x: x[1])[:3]],
         "first": min((t["date"] for t in trades), default=None),
         "last": max((t["date"] for t in trades), default=None),
         "days": days, "daily": [round(daily[d], 2) for d in days],

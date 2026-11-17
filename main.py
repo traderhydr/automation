@@ -249,6 +249,12 @@ def main():
     bucket = PERIODS[a.period][1]
     today = stats.compute([t for t in local if inside(t, start, end)], bucket)
     month = stats.compute([t for t in local if inside(t, end - timedelta(days=30), end)])
+    extra = None
+    if a.period == "daily":      # running totals + yesterday for the daily report
+        extra = {"prev": stats.compute([t for t in local if inside(t, start - timedelta(days=1), start)]),
+                 "wtd": stats.compute([t for t in local if inside(t, start - timedelta(days=start.weekday()), end)]),
+                 "mtd": stats.compute([t for t in local if inside(t, start.replace(day=1), end)]),
+                 "all": stats.compute([t for t in local if datetime.fromisoformat(t["date"]) < end])}
     rkey = f"{a.period}:{start:%Y-%m-%d}"
     rpath = "data/posted_reports.json"
     done = set(json.load(open(rpath))) if os.path.exists(rpath) else set()
@@ -267,7 +273,7 @@ def main():
         print("No closed trades in this window – nothing to post."); return
 
     paths = charts.build_all(today, month, a.period, "out", label)
-    cap = caption.make_captions(today, month, a.period, label)
+    cap = caption.make_captions(today, month, a.period, label, extra)
     print(cap["telegram"]); print("\nImages:", paths)
 
     if a.preview:

@@ -20,27 +20,81 @@ def _intro(today):
     return "Real results, zero cherry-picking. Red days happen: risk management is the job."
 
 
-def telegram_report(today, month, period, label):
-    """Layout supplied by the channel owner (clean spacing). All numbers come from the real trade history."""
+def _name(sym):
+    """Display name: 1000BONK -> BONK, 1000000MOG -> MOG (exchange price-scale prefixes mean nothing to readers)."""
+    import re
+    return re.sub(r"^(?:1M|10{3,6})(?=[A-Z])", "", sym)
+
+
+def _movers(today):
+    w, l = today.get("top_win") or [], today.get("top_loss") or []
+    rows = []
+    if w:
+        rows.append("• Winners: " + ", ".join(f"{_name(s)} {v:+.2f}%" for s, v in w))
+    if l:
+        rows.append("• Losers: " + ", ".join(f"{_name(s)} {v:+.2f}%" for s, v in l))
+    return ("<b>🏆 TOP MOVERS</b>\n\n" + "\n".join(rows)) if rows else ""
+
+
+def _samples(today, period):
+    tz = today["teaser"]
+    if not (tz["closed"] or tz["open"]):
+        return ""
+    when = {"daily": "TODAY", "weekly": "THIS WEEK", "monthly": "THIS MONTH", "yearly": "THIS YEAR"}[period]
+    rows = []
+    if tz["closed"]:
+        items = " · ".join(f"{_name(s)} {v:+.2f}%" + (" ✅" if v > 0 else " ❌") for s, v in tz["items"])
+        rows.append(f"• {items}")
+        rows.append(f"• Result: {tz['wins']}W / {tz['losses']}L · net {tz['total']:+.2f}%")
+    else:
+        rows.append(f"• None of the free samples closed {when.lower()}")
+    if tz["open"]:
+        rows.append(f"• {tz['open']} free sample{'s' if tz['open'] != 1 else ''} still open")
+    return f"<b>⭐ FREE SAMPLES CLOSED {when}</b>\n\n" + "\n".join(rows)
+
+
+def _running(today, extra):
+    """Week-to-date / month-to-date / since-tracking totals (calendar based, honest labels)."""
+    rows = []
+    for key, label in (("wtd", "Week-to-Date"), ("mtd", "Month-to-Date")):
+        st = (extra or {}).get(key)
+        if st and st["trades"] > today["trades"]:                 # skip when it equals today (e.g. Monday / the 1st)
+            rows.append(f"• {label}: {st['total_pct']:+.2f}% · {st['win_rate']}% win rate · {st['trades']} trades")
+    al = (extra or {}).get("all")
+    if al and al["trades"] > today["trades"]:
+        rows.append(f"• Since Tracking Began ({len(al['days'])} days): {al['total_pct']:+.2f}% · {al['win_rate']}% win rate · {al['trades']} trades")
+    return ("<b>📈 RUNNING TOTALS</b>\n\n" + "\n".join(rows)) if rows else ""
+
+
+def telegram_report(today, month, period, label, extra=None):
+    """Layout supplied by the channel owner (clean spacing), extended with running totals, top movers and
+    the free samples that closed in the period. All numbers come from the real trade history."""
     from . import links
     pw, Pw = PERIOD_WORD[period], PERIOD_WORD[period].title()
     net = "📈" if today["total_pct"] >= 0 else "📉"
     rows = [f"• {Pw} Win Rate: {today['win_rate']}% ({today['wins']} / {today['trades']} trades in profit) ✅",
             f"• {Pw} Net PnL: {today['total_pct']:+.2f}% {net}"]
+    pf = today["profit_factor"] if today.get("profit_factor") is not None else "n/a"
+    aw = f"{today.get('avg_win', 0):+.2f}%" if today.get("wins") else "n/a"
+    al = f"{today.get('avg_loss', 0):+.2f}%" if today.get("losses") else "n/a"
+    rows.append(f"• Profit Factor: {pf} · Avg Win {aw} · Avg Loss {al}")
+    rows.append(f"• Best / Worst Trade: {today['best']:+.2f}% / {today['worst']:+.2f}%")
     if period == "daily":
-        n = max(1, min(30, len(month["days"])))      # honest label: days of history actually tracked (max 30)
-        rows += [f"• {n}-Day Win Rate: {month['win_rate']}% 📈", f"• {n}-Day Cumulative: {month['total_pct']:+.1f}%"]
+        prev = (extra or {}).get("prev")
+        if prev and prev["trades"]:
+            rows.append(f"• Yesterday: {prev['total_pct']:+.2f}% ({prev['wins']} / {prev['trades']} in profit)")
+        if not extra:                                             # fallback when no extra windows were computed
+            n = max(1, min(30, len(month["days"])))
+            rows += [f"• {n}-Day Win Rate: {month['win_rate']}% 📈", f"• {n}-Day Cumulative: {month['total_pct']:+.1f}%"]
     else:
-        pf = today["profit_factor"] if today["profit_factor"] is not None else "n/a"
-        rows += [f"• Profit Factor: {pf}", f"• Best / Worst Trade: {today['best']:+.2f}% / {today['worst']:+.2f}%",
-                 f"• Max Drawdown: -{today['max_drawdown']}%"]
-    tz = today["teaser"]
-    if tz["closed"] or tz["open"]:
-        items = ", ".join(f"{s} {v:+.2f}%" + (" ✅" if v > 0 else " ❌") for s, v in tz["items"])
-        rows.append(f"• ⭐ Free Samples Shared: {items}" + (f" · {tz['open']} still open" if tz["open"] else ""))
+        rows.append(f"• Max Drawdown: -{today['max_drawdown']}%")
     note = f"(Figures reflect the sum of all closed trades, stop-losses included. {config.PNL_NOTE}.)"
     parts = [f"<b>📊 {pw} PERFORMANCE REPORT · {label}</b>", SEP + "\n" + _intro(today),
-             "<b>⚡ THE BREAKDOWN</b>", "\n".join(rows), note + "\n" + SEP]
+             "<b>⚡ THE BREAKDOWN</b>\n\n" + "\n".join(rows)]
+    if period == "daily":
+        parts.append(_running(today, extra))
+    parts += [_movers(today), _samples(today, period), note + "\n" + SEP]
+    parts = [p for p in parts if p]
     eco = links.ecosystem_block() if config.LINKS_IN_POSTS else ""
     if eco:
         parts += [eco, SEP]
@@ -74,7 +128,7 @@ def _fallback(today, month, period="daily", label=""):
     }
 
 
-def make_captions(today, month, period="daily", label=""):
+def make_captions(today, month, period="daily", label="", extra=None):
     if not config.ANTHROPIC_API_KEY:
         c = _fallback(today, month, period, label)
     else:
@@ -105,7 +159,7 @@ def make_captions(today, month, period="daily", label=""):
     from . import links
     c["links_tg"], c["links_plain"] = links.telegram_block(), links.plain_block()
     # Telegram post = the owner's template (exact real numbers); Claude/fallback text is only used for X + hashtags
-    c["telegram"] = "\n\n".join(x for x in (telegram_report(today, month, period, label), tags, links.disclosure() if config.LINKS_IN_POSTS else "", DISCLAIMER) if x)
+    c["telegram"] = "\n\n".join(x for x in (telegram_report(today, month, period, label, extra), tags, links.disclosure() if config.LINKS_IN_POSTS else "", DISCLAIMER) if x)
     c["tags"] = tags
     c["x_tags"] = " ".join(list(dict.fromkeys(c.get("hashtags") or BASE_TAGS))[:3])
     return c
