@@ -61,10 +61,15 @@ def telegram_post(paths, caption, chats=None):
     return _each(chats or config.PUBLIC_CHANNELS, send)
 
 
-def telegram_text(text, chats=None):
-    """Text-only post to each chat; returns the chats that worked."""
-    return _each(chats or config.PUBLIC_CHANNELS, lambda chat: _tg("sendMessage", data={
-        "chat_id": chat, "text": (text + MARK)[:4096], "parse_mode": "HTML", "disable_web_page_preview": True}))
+def telegram_text(text, chats=None, plain=False):
+    """Text-only post to each chat; returns the chats that worked. plain=True sends the text exactly as given:
+    no HTML parsing and no invisible marker (used for the copy-paste signal, which must stay pristine)."""
+    def send(chat):
+        data = {"chat_id": chat, "text": text[:4096], "disable_web_page_preview": True}
+        if not plain:
+            data.update(text=(text + MARK)[:4096], parse_mode="HTML")
+        _tg("sendMessage", data=data)
+    return _each(chats or config.PUBLIC_CHANNELS, send)
 
 
 def discord_post(paths, text):

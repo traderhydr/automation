@@ -64,13 +64,21 @@ def _post_signal(sig, status_candles_src, iv, status, delay_min, a, chats=None, 
     path = f"out/signal_{sig['id']}.png"
     signal_chart.signal_chart(sig, candles, iv, src, path)
     cap, tags = signals.signal_caption(sig, status, delay_min, config.PREMIUM_LINK)
+    sig_text = signals.signal_text(sig) if config.SIGNAL_POST_STYLE == "signal" else None
+    if sig_text:
+        print("--- message 1 (plain text, copy-paste signal) ---\n" + sig_text + "\n--- message 2 (chart + note) ---")
     print(cap, "\nImage:", path)
     if a.preview and not a.demo:
-        publish.preview_to_me([path], cap)
+        publish.preview_to_me([path], (sig_text + "\n\n———\n" if sig_text else "") + cap)
     if a.demo or config.DRY_RUN:
         print("[DRY RUN] nothing posted.\n"); return []
     rr = signals.risk_reward(sig)["final_rr"]
-    ok = publish.telegram_photo(path, cap, chats or config.CHANNELS_SIGNALS)
+    todo = chats or config.CHANNELS_SIGNALS
+    if sig_text:
+        ok = publish.telegram_text(sig_text, todo, plain=True)          # 1) the signal, exactly as posted
+        publish.telegram_photo(path, cap, ok)                            # 2) chart + free-sample note (only where 1 worked)
+    else:
+        ok = publish.telegram_photo(path, cap, todo)
     if not extras:
         return ok
     safe(publish.discord_post, [path], f"{sig['base']} {sig['side']} | R:R 1:{rr} (free sample)\n{tags}")

@@ -1,6 +1,6 @@
 """Regression tests built from REAL posts of the user's channel. Run: python -m unittest discover tests"""
 import unittest
-from src import parse
+from src import parse, config
 from src.parse import parse_trades
 from src.signals import parse_signals, risk_reward
 
@@ -140,12 +140,16 @@ class PriceFormatting(unittest.TestCase):
         from src.signals import signal_caption
         doge = ("#DOGE/USDT\nSHORT\nTimeframe: 15m\nEntry Targets:\n1) 0.064790\n2) 0.065037\n3) 0.065283\n"
                 "Take-Profit Targets:\n1) 0.063968\n2) 0.063146\n3) 0.062323\n4) 0.060679\nStop Targets:\n1) 0.066434\nLeverage: Cross (15X)")
+        config.SIGNAL_POST_STYLE = "short"
         cap, _ = signal_caption(parse_signals(msgs(doge))[0], "open", 0, "")
+        config.SIGNAL_POST_STYLE = "signal"
         for must in ("0.06479 / 0.065037 / 0.065283", "0.063968 → 0.063146 → 0.062323 → 0.060679", "0.066434"):
             self.assertIn(must, cap)
         tiny = ("#PEPE/USDT\nLONG\nTimeframe: 5m\nEntry Targets:\n1) 0.000004922\nTake-Profit Targets:\n1) 0.000004951\n"
                 "Stop Targets:\n1) 0.000004668\nLeverage: Cross (25X)")
+        config.SIGNAL_POST_STYLE = "short"
         cap2, _ = signal_caption(parse_signals(msgs(tiny))[0], "open", 0, "")
+        config.SIGNAL_POST_STYLE = "signal"
         self.assertIn("0.000004922", cap2)
         self.assertNotIn("e-06", cap2)
 
@@ -155,7 +159,9 @@ class ShortSignalPost(unittest.TestCase):
         from src.signals import signal_caption
         doge = ("#DOGE/USDT\nSHORT\nTimeframe: 15m\nEntry Targets:\n1) 0.064790\n2) 0.065037\n3) 0.065283\n"
                 "Take-Profit Targets:\n1) 0.063968\n2) 0.063146\n3) 0.062323\n4) 0.060679\nStop Targets:\n1) 0.066434\nLeverage: Cross (15X)")
+        config.SIGNAL_POST_STYLE = "short"
         cap, _ = signal_caption(parse_signals(msgs(doge))[0], "open", 0, "https://t.me/Hydrzoro")
+        config.SIGNAL_POST_STYLE = "signal"
         plain = cap.replace("<b>", "").replace("</b>", "").replace("<i>", "").replace("</i>", "")
         expected = """#DOGE SHORT · 15X 🔴
 
@@ -210,3 +216,41 @@ class NoLinksInReports(unittest.TestCase):
         self.assertNotIn("OFFICIAL ECOSYSTEM", c["telegram"])
         self.assertNotIn("Referral", c["telegram"])
         self.assertIn("not financial advice", c["telegram"].lower())   # the risk disclaimer stays
+
+
+NEAR_SIGNAL = """#NEAR/USDT
+LONG
+Timeframe: 5m
+Entry Targets:
+1) 3.2320
+2) 3.2253
+3) 3.2187
+Take-Profit Targets:
+1) 3.2542
+2) 3.2764
+3) 3.2986
+4) 3.3430
+Stop Targets:
+1) 3.1876
+Leverage: Cross (15X)"""
+
+
+class FreeSignalIsPostedAsTheOriginal(unittest.TestCase):
+    def test_signal_text_is_verbatim_with_original_digits(self):
+        from src.signals import signal_text
+        s = parse_signals(msgs(NEAR_SIGNAL))[0]
+        self.assertEqual(signal_text(s), NEAR_SIGNAL)                 # keeps 3.2320, not 3.232
+        self.assertEqual(risk_reward(s)["final_rr"], 2.5)
+
+    def test_rebuilt_text_when_there_is_no_raw_text(self):
+        from src.signals import signal_text
+        s = parse_signals(msgs(NEAR_SIGNAL))[0]; s["raw"] = None
+        rebuilt = signal_text(s)
+        self.assertTrue(rebuilt.startswith("#NEAR/USDT\nLONG\nTimeframe: 5m\nEntry Targets:\n1) 3.232\n"))
+        self.assertTrue(rebuilt.endswith("Stop Targets:\n1) 3.1876\nLeverage: Cross (15X)"))
+
+    def test_chart_note_has_no_levels_and_keeps_status(self):
+        from src.signals import signal_caption
+        cap, _ = signal_caption(parse_signals(msgs(NEAR_SIGNAL))[0], "open", 0, "https://t.me/Hydrzoro")
+        self.assertIn("Risk : Reward", cap); self.assertIn("Status", cap); self.assertIn("Free sample", cap)
+        self.assertNotIn("Stop Loss", cap); self.assertNotIn("Entry:", cap)

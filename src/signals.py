@@ -23,11 +23,13 @@ def _parse_one(m):
     A) own template:   Pair: ORDIUSDT / Direction: LONG / Entry: a-b-c / Take Profits: ... / Stop Loss: x
     B) Cornix layout:  #KAVA/USDT / SHORT / Timeframe: 5m / Entry Targets: 1) .. / Take-Profit Targets: 1) .. / Stop Targets: 1) .. / Leverage: Cross (15X)"""
     t = m["text"]
+    layout_b = False
     pair = re.search(r"pair\s*:\s*#?([A-Z0-9]{2,15}?)(?:/)?(USDT|USDC)\b", t, re.I)
     d = re.search(r"direction\s*:\s*(long|short)", t, re.I)
     entries, tps, sl = NUM.findall(_line(t, "Entry")), NUM.findall(_line(t, r"Take Profits?")), NUM.findall(_line(t, "Stop Loss"))
     strategy, tf = _line(t, "Strategy"), None
     if not (pair and d and entries and tps and sl):                       # layout B
+        layout_b = True
         pair = re.search(r"#?\b([A-Z0-9]{2,15})\s*/\s*(USDT|USDC)\b", t)
         d = re.search(r"^\W*(LONG|SHORT)\W*$", t, re.I | re.M)
         entries = _list_after(t, r"Entry Targets?|Entry Orders?")
@@ -46,7 +48,25 @@ def _parse_one(m):
         "base": pair.group(1).upper(), "side": d.group(1).upper(),
         "leverage": int(lev.group(1)) if lev else None, "strategy": strategy,
         "timeframe": tf, "entries": [float(x) for x in entries], "tps": [float(x) for x in tps], "sl": float(sl[0]),
+        "raw": t.strip() if layout_b else None,                    # the exact text posted in the channel (standard layout only)
     }
+
+
+def signal_text(sig):
+    """The signal in the standard Cornix layout. Uses the original text verbatim when we have it (keeps digits such as
+    3.2320), otherwise rebuilds it from the parsed fields."""
+    if sig.get("raw"):
+        return sig["raw"]
+    from .signal_chart import exact
+    lines = [f"#{sig['base']}/{sig['symbol'][len(sig['base']):]}", sig["side"]]
+    if sig.get("timeframe"):
+        lines.append(f"Timeframe: {sig['timeframe']}")
+    lines += ["Entry Targets:"] + [f"{i}) {exact(x)}" for i, x in enumerate(sig["entries"], 1)]
+    lines += ["Take-Profit Targets:"] + [f"{i}) {exact(x)}" for i, x in enumerate(sig["tps"], 1)]
+    lines += ["Stop Targets:", f"1) {exact(sig['sl'])}"]
+    if sig.get("leverage"):
+        lines.append(f"Leverage: Cross ({sig['leverage']}X)")
+    return "\n".join(lines)
 
 
 def parse_signals(messages):
@@ -157,6 +177,10 @@ def signal_caption(sig, status=None, delay_min=None, premium_link=""):
         note = "🎁 <i>Free sample from our premium channel. You can take it live.</i>"
         if premium_link:
             note += f"\n🔒 Premium members get every signal live: DM {config.PREMIUM_HANDLE} to join"
+    if config.SIGNAL_POST_STYLE == "signal":         # the signal itself is posted separately, as plain text; this is the chart caption
+        from .caption import SEP
+        note_lines = [x for x in lines if x.startswith(("• Risk", "• Status"))]
+        return f"<b>#{sig['base']} {sig['side']}{lev} {side_emoji}</b>\n\n{SEP}\n" + "\n".join(note_lines) + f"\n\n{note}\n{SEP}", tags
     if config.SIGNAL_POST_STYLE == "short":          # the owner's compact format
         from .caption import SEP
         return f"<b>#{sig['base']} {sig['side']}{lev} {side_emoji}</b>\n\n{SEP}\n" + "\n".join(lines) + f"\n\n{note}\n{SEP}", tags

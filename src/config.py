@@ -55,7 +55,7 @@ PREMIUM_LINK = env("PREMIUM_LINK", "https://t.me/Hydrzoro")
 PREMIUM_HANDLE = env("PREMIUM_HANDLE", "@Hydrzoro")      # people DM this handle to join premium                                       # where to subscribe / contact for premium
 RANDOM_SECRET = env("RANDOM_SECRET", "change-me")                        # keeps the daily random times unpredictable
 PUBLIC_SIGNAL_MAX_AGE_MIN = int(env("PUBLIC_SIGNAL_MAX_AGE_MIN", "30") or 30)   # never post a free sample older than this
-SIGNAL_POST_STYLE = env("SIGNAL_POST_STYLE", "short")   # short = compact post (default) | full = with links block, hashtags and disclaimer
+SIGNAL_POST_STYLE = env("SIGNAL_POST_STYLE", "signal")   # signal (default) = the signal text exactly as posted + chart/notes | short = compact | full = with links, hashtags, disclaimer
 LINKS_POST_DAYS = [int(x) for x in env("LINKS_POST_DAYS", "1,11,21").replace(" ", "").split(",") if x.isdigit()]   # days of the month
 LINKS_POST_HOUR = int(env("LINKS_POST_HOUR", "18") or 18)                                                         # local hour (TIMEZONE)
 LINKS_IN_POSTS = env("LINKS_IN_POSTS", "0") == "1"   # default 0: links ONLY in the standalone links post; 1 = also append the links block to reports/BTC posts
