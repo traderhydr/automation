@@ -73,7 +73,7 @@ class CaptionTemplate(unittest.TestCase):
         month = {"win_rate": 55.6, "total_pct": -721.4, "days": ["a", "b", "c"]}
         t = caption.telegram_report(today, month, "daily", "02 NOV 2026")
         for must in ("DAILY PERFORMANCE REPORT · 02 NOV 2026", "81.3% (39 / 48 trades in profit)", "-286.39%",
-                     "3-Day Win Rate: 55.6%", "3-Day Cumulative: -721.4%", "OFFICIAL ECOSYSTEM & LINKS", "Media & Socials", "stop-losses included"):
+                     "3-Day Win Rate: 55.6%", "3-Day Cumulative: -721.4%", "stop-losses included"):
             self.assertIn(must, t)
         self.assertNotIn("30-Day", t)       # only 3 days of history -> must not claim 30 days
 
@@ -209,4 +209,4 @@ class NoLinksInReports(unittest.TestCase):
         c = caption.make_captions(today, {"days": ["d"], "win_rate": 75, "total_pct": 1.2}, "daily", "17 NOV 2026")
         self.assertNotIn("OFFICIAL ECOSYSTEM", c["telegram"])
         self.assertNotIn("Referral", c["telegram"])
-        self.assertIn("Not financial advice", c["telegram"])         # the risk disclaimer stays
+        self.assertIn("not financial advice", c["telegram"].lower())   # the risk disclaimer stays
